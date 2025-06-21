@@ -73,10 +73,13 @@ pip install \
     accelerate \
     numpy \
     scipy \
-    sqlite3 \
+# install seperately as this failed sqlite3 \
     threading \
     dataclasses \
     typing
+    
+# install sqlite 3 as a stand alond command
+sudo apt install libsqlite3-dev
 
 # Create requirements.txt
 echo "📝 Creating requirements.txt..."
