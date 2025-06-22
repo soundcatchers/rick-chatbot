@@ -64,6 +64,71 @@ echo "📁 Creating project directory at $PROJECT_DIR"
 mkdir -p "$PROJECT_DIR"
 cd "$PROJECT_DIR"
 
+# Create Python virtual environment EARLY (before other operations)
+echo "🐍 Creating Python virtual environment..."
+if [ -d "rick_env" ]; then
+    echo "⚠️  Virtual environment already exists, removing old one..."
+    rm -rf rick_env
+fi
+
+# Create virtual environment with explicit error checking
+if ! python3 -m venv rick_env; then
+    echo "❌ Failed to create virtual environment"
+    echo "Checking python3-venv installation..."
+    if ! python3 -c "import venv" 2>/dev/null; then
+        echo "❌ python3-venv module not properly installed"
+        echo "Trying to install it again..."
+        sudo apt install -y python3-venv python3-dev
+        if ! python3 -m venv rick_env; then
+            echo "❌ Still failed to create virtual environment"
+            exit 1
+        fi
+    else
+        echo "❌ Unknown error creating virtual environment"
+        exit 1
+    fi
+fi
+
+# Verify virtual environment was created
+if [ ! -d "rick_env" ] || [ ! -f "rick_env/bin/activate" ]; then
+    echo "❌ Virtual environment creation failed - directory or activate script missing"
+    exit 1
+fi
+
+echo "✅ Virtual environment created successfully"
+
+# Test activation before proceeding
+echo "⚡ Testing virtual environment activation..."
+if ! source rick_env/bin/activate; then
+    echo "❌ Failed to activate virtual environment"
+    exit 1
+fi
+
+# Verify we're in the virtual environment
+if [ -z "$VIRTUAL_ENV" ]; then
+    echo "❌ Virtual environment activation failed - VIRTUAL_ENV not set"
+    exit 1
+fi
+
+echo "✅ Virtual environment activated successfully"
+echo "📍 Virtual environment path: $VIRTUAL_ENV"
+
+# Upgrade pip in virtual environment
+echo "📦 Upgrading pip in virtual environment..."
+if ! pip install --upgrade pip; then
+    echo "❌ Failed to upgrade pip"
+    exit 1
+fi
+
+# Install basic Python dependencies first
+echo "🔧 Installing basic Python dependencies..."
+if ! pip install requests colorama numpy; then
+    echo "❌ Failed to install basic dependencies"
+    exit 1
+fi
+
+echo "✅ Basic Python dependencies installed"
+
 # Download the main chatbot file directly from GitHub
 echo "📥 Downloading rick_chatbot.py from GitHub..."
 if curl -L -o rick_chatbot.py "https://raw.githubusercontent.com/soundcatchers/rick-chatbot/main/rick_chatbot.py"; then
@@ -231,34 +296,24 @@ if [ -n "$DEFAULT_MODEL" ]; then
     echo "🎯 Default model set to: $DEFAULT_MODEL"
 fi
 
-# Create Python virtual environment for traditional approach
-echo "🐍 Creating Python virtual environment..."
-python3 -m venv rick_env
+# Install PyTorch and transformers (optional, for traditional approach)
+echo "🤖 Installing PyTorch and transformers (for traditional approach)..."
+echo "This may take a while..."
 
-# Activate virtual environment
-echo "⚡ Activating virtual environment..."
-source rick_env/bin/activate
+# Install PyTorch first
+if ! pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu; then
+    echo "⚠️  Failed to install PyTorch, trying alternative approach..."
+    if ! pip install torch torchvision torchaudio; then
+        echo "⚠️  PyTorch installation failed, continuing without it..."
+        echo "Traditional transformer models may not work."
+    fi
+fi
 
-# Upgrade pip
-echo "📦 Upgrading pip..."
-pip install --upgrade pip
-
-# Install Python dependencies for both approaches
-echo "🔧 Installing Python dependencies..."
-pip install \
-    requests \
-    numpy \
-    colorama
-
-# For traditional transformers approach (optional)
-echo "🤖 Installing transformers (for traditional approach)..."
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-pip install \
-    transformers \
-    tokenizers \
-    datasets \
-    accelerate \
-    scipy
+# Install transformers and related packages
+if ! pip install transformers tokenizers datasets accelerate scipy; then
+    echo "⚠️  Failed to install some transformer packages"
+    echo "Continuing with basic installation..."
+fi
 
 # Create requirements.txt
 echo "📝 Creating requirements.txt..."
@@ -299,7 +354,7 @@ fi
 
 echo "✅ rick_chatbot.py verified in project directory"
 
-# Create start script
+# Create start script with better error handling
 echo "🚀 Creating start script..."
 cat > start_rick.sh << 'EOF'
 #!/bin/bash
@@ -312,13 +367,31 @@ if [ ! -f "rick_chatbot.py" ]; then
     exit 1
 fi
 
+# Check if virtual environment exists
+if [ ! -d "rick_env" ] || [ ! -f "rick_env/bin/activate" ]; then
+    echo "❌ Error: Virtual environment not found!"
+    echo "Please run the setup script again."
+    exit 1
+fi
+
+# Activate virtual environment
+echo "⚡ Activating virtual environment..."
 source rick_env/bin/activate
+
+# Verify activation
+if [ -z "$VIRTUAL_ENV" ]; then
+    echo "❌ Error: Failed to activate virtual environment!"
+    exit 1
+fi
+
+echo "✅ Virtual environment activated: $VIRTUAL_ENV"
 
 # Check if Ollama is running, start if needed
 if ! pgrep -f "ollama serve" > /dev/null; then
-    echo "Starting Ollama server..."
+    echo "🚀 Starting Ollama server..."
     nohup ollama serve > ollama.log 2>&1 &
     sleep 3
+    echo "✅ Ollama server started"
 fi
 
 echo "🧪 Starting Rick Sanchez Chatbot..."
@@ -346,11 +419,15 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
+# Deactivate virtual environment for final summary
+deactivate 2>/dev/null || true
+
 # Final setup summary
 echo ""
 echo "🎉 Setup Complete!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "📁 Project directory: $PROJECT_DIR"
+echo "🐍 Virtual environment: $PROJECT_DIR/rick_env"
 echo "🧠 Installed models: $MODELS_INSTALLED"
 if [ -n "$DEFAULT_MODEL" ]; then
     echo "🎯 Default model: $DEFAULT_MODEL"
@@ -380,6 +457,12 @@ echo "🔧 To install as a system service:"
 echo "   sudo cp rick-chatbot.service /etc/systemd/system/"
 echo "   sudo systemctl enable rick-chatbot"
 echo "   sudo systemctl start rick-chatbot"
+echo ""
+echo "🔍 To verify virtual environment:"
+echo "   cd $PROJECT_DIR"
+echo "   source rick_env/bin/activate"
+echo "   which python3"
+echo "   pip list"
 echo ""
 echo "*burp* Wubba lubba dub dub! Your Rick chatbot is ready!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
