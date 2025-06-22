@@ -1,0 +1,779 @@
+thebeast@raspberrypi:~/rick_chatbot $ ./setup_pi.sh
+🧪 Rick Sanchez Chatbot Setup (Enhanced Edition)
+*burp* Setting up your Pi for some REAL science with multiple AI backends...
+📊 Detected RAM: 3GB
+⚠️  Warning: Less than 4GB RAM detected. Ollama models may run slowly.
+Consider using lighter models or the traditional transformers approach.
+📦 Updating system packages...
+Hit:1 http://deb.debian.org/debian bookworm InRelease
+Hit:2 http://deb.debian.org/debian-security bookworm-security InRelease
+Hit:3 http://archive.raspberrypi.com/debian bookworm InRelease
+Hit:4 http://deb.debian.org/debian bookworm-updates InRelease
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+All packages are up to date.
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+Calculating upgrade... Done
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+🔧 Installing system dependencies...
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+python3 is already the newest version (3.11.2-1+b1).
+python3-pip is already the newest version (23.0.1+dfsg-1+rpt1).
+python3-venv is already the newest version (3.11.2-1+b1).
+python3-dev is already the newest version (3.11.2-1+b1).
+build-essential is already the newest version (12.9).
+cmake is already the newest version (3.25.1-1).
+git is already the newest version (1:2.39.5-0+deb12u2).
+curl is already the newest version (7.88.1-10+deb12u12).
+wget is already the newest version (1.21.3-1+deb12u1).
+libopenblas-dev is already the newest version (0.3.21+ds-4).
+liblapack-dev is already the newest version (3.11.0-2).
+libjpeg-dev is already the newest version (1:2.1.5-2).
+zlib1g-dev is already the newest version (1:1.2.13.dfsg-1+rpt1).
+libfreetype6-dev is already the newest version (2.12.1+dfsg-5+deb12u4).
+liblcms2-dev is already the newest version (2.14-2).
+libwebp-dev is already the newest version (1.2.4-0.2+deb12u1).
+tcl8.6-dev is already the newest version (8.6.13+dfsg-2).
+tk8.6-dev is already the newest version (8.6.13-2).
+python3-tk is already the newest version (3.11.2-3).
+libharfbuzz-dev is already the newest version (6.0.0+dfsg-3).
+libfribidi-dev is already the newest version (1.0.8-2.1).
+libxcb1-dev is already the newest version (1.15-1).
+libsqlite3-dev is already the newest version (3.40.1-2+deb12u1).
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+📁 Creating project directory at /home/thebeast/rick_chatbot
+🐍 Creating Python virtual environment...
+⚠️  Virtual environment already exists, removing old one...
+✅ Virtual environment created successfully
+⚡ Testing virtual environment activation...
+✅ Virtual environment activated successfully
+📍 Virtual environment path: /home/thebeast/rick_chatbot/rick_env
+📦 Upgrading pip in virtual environment...
+Looking in indexes: https://pypi.org/simple, https://www.piwheels.org/simple
+Requirement already satisfied: pip in ./rick_env/lib/python3.11/site-packages (23.0.1)
+Collecting pip
+  Using cached pip-25.1.1-py3-none-any.whl (1.8 MB)
+Installing collected packages: pip
+  Attempting uninstall: pip
+    Found existing installation: pip 23.0.1
+    Uninstalling pip-23.0.1:
+      Successfully uninstalled pip-23.0.1
+Successfully installed pip-25.1.1
+🔧 Installing basic Python dependencies...
+Looking in indexes: https://pypi.org/simple, https://www.piwheels.org/simple
+Collecting requests
+  Using cached requests-2.32.4-py3-none-any.whl.metadata (4.9 kB)
+Collecting colorama
+  Using cached https://www.piwheels.org/simple/colorama/colorama-0.4.6-py2.py3-none-any.whl (25 kB)
+Collecting numpy
+  Downloading numpy-2.3.1-cp311-cp311-manylinux_2_28_aarch64.whl.metadata (62 kB)
+Collecting charset_normalizer<4,>=2 (from requests)
+  Using cached charset_normalizer-3.4.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl.metadata (35 kB)
+Collecting idna<4,>=2.5 (from requests)
+  Using cached https://www.piwheels.org/simple/idna/idna-3.10-py3-none-any.whl (70 kB)
+Collecting urllib3<3,>=1.21.1 (from requests)
+  Using cached urllib3-2.5.0-py3-none-any.whl.metadata (6.5 kB)
+Collecting certifi>=2017.4.17 (from requests)
+  Downloading certifi-2025.6.15-py3-none-any.whl.metadata (2.4 kB)
+Using cached requests-2.32.4-py3-none-any.whl (64 kB)
+Using cached charset_normalizer-3.4.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (142 kB)
+Using cached urllib3-2.5.0-py3-none-any.whl (129 kB)
+Downloading numpy-2.3.1-cp311-cp311-manylinux_2_28_aarch64.whl (14.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 14.6/14.6 MB 14.6 MB/s eta 0:00:00
+Downloading certifi-2025.6.15-py3-none-any.whl (157 kB)
+Installing collected packages: urllib3, numpy, idna, colorama, charset_normalizer, certifi, requests
+Successfully installed certifi-2025.6.15 charset_normalizer-3.4.2 colorama-0.4.6 idna-3.10 numpy-2.3.1 requests-2.32.4 urllib3-2.5.0
+✅ Basic Python dependencies installed
+📥 Downloading rick_chatbot.py from GitHub...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 13023  100 13023    0     0  58665      0 --:--:-- --:--:-- --:--:-- 58927
+✅ rick_chatbot.py downloaded successfully!
+🤖 Installing Ollama...
+✅ Ollama is already installed
+🚀 Starting Ollama service...
+✅ Ollama server already running
+⏳ Waiting for Ollama to fully initialize...
+✅ Ollama API is ready
+🧠 Installing recommended AI models...
+This may take several minutes depending on your internet connection...
+🔍 Installing models in preferred order...
+📥 Pulling phi3:mini (Microsoft Phi-3 mini model)...
+pulling manifest 
+pulling 633fc5be925f: 100% ▕███████████████████▏ 2.2 GB                         
+pulling fa8235e5b48f: 100% ▕███████████████████▏ 1.1 KB                         
+pulling 542b217f179c: 100% ▕███████████████████▏  148 B                         
+pulling 8dde1baf1db0: 100% ▕███████████████████▏   78 B                         
+pulling 23291dc44752: 100% ▕███████████████████▏  483 B                         
+verifying sha256 digest 
+writing manifest 
+success 
+✅ phi3:mini installed successfully
+📥 Pulling qwen2:1.5b (Qwen 1.5B model)...
+pulling manifest 
+pulling 405b56374e02: 100% ▕███████████████████▏ 934 MB                         
+pulling 62fbfd9ed093: 100% ▕███████████████████▏  182 B                         
+pulling c156170b718e: 100% ▕███████████████████▏  11 KB                         
+pulling f02dd72bb242: 100% ▕███████████████████▏   59 B                         
+pulling c9f5e9ffbc5f: 100% ▕███████████████████▏  485 B                         
+verifying sha256 digest 
+writing manifest 
+success 
+✅ qwen2:1.5b installed successfully
+📥 Pulling llama3.2:1b (Meta Llama 3.2 1B model)...
+pulling manifest 
+pulling 74701a8c35f6: 100% ▕███████████████████▏ 1.3 GB                         
+pulling 966de95ca8a6: 100% ▕███████████████████▏ 1.4 KB                         
+pulling fcc5a6bec9da: 100% ▕███████████████████▏ 7.7 KB                         
+pulling a70ff7e570d9: 100% ▕███████████████████▏ 6.0 KB                         
+pulling 4f659a1e86d7: 100% ▕███████████████████▏  485 B                         
+verifying sha256 digest 
+writing manifest 
+success 
+✅ llama3.2:1b installed successfully
+📥 Pulling gemma:2b (Google Gemma 2B model)...
+pulling manifest 
+pulling c1864a5eb193: 100% ▕███████████████████▏ 1.7 GB                         
+pulling 097a36493f71: 100% ▕███████████████████▏ 8.4 KB                         
+pulling 109037bec39c: 100% ▕███████████████████▏  136 B                         
+pulling 22a838ceb7fb: 100% ▕███████████████████▏   84 B                         
+pulling 887433b89a90: 100% ▕███████████████████▏  483 B                         
+verifying sha256 digest 
+writing manifest 
+success 
+✅ gemma:2b installed successfully
+✅ Installed 4 Ollama models
+🎯 Default model set to: phi3:mini
+🤖 Installing PyTorch and transformers (for traditional approach)...
+This may take a while...
+Looking in indexes: https://download.pytorch.org/whl/cpu, https://www.piwheels.org/simple
+Collecting torch
+  Using cached https://download.pytorch.org/whl/cpu/torch-2.7.1%2Bcpu-cp311-cp311-manylinux_2_28_aarch64.whl.metadata (27 kB)
+Collecting torchvision
+  Using cached https://download.pytorch.org/whl/cpu/torchvision-0.22.1-cp311-cp311-manylinux_2_28_aarch64.whl.metadata (6.1 kB)
+Collecting torchaudio
+  Using cached https://download.pytorch.org/whl/cpu/torchaudio-2.7.1-cp311-cp311-manylinux_2_28_aarch64.whl.metadata (6.6 kB)
+Collecting filelock (from torch)
+  Using cached https://www.piwheels.org/simple/filelock/filelock-3.18.0-py3-none-any.whl (16 kB)
+Collecting typing-extensions>=4.10.0 (from torch)
+  Downloading https://www.piwheels.org/simple/typing-extensions/typing_extensions-4.13.0-py3-none-any.whl (45 kB)
+Collecting sympy>=1.13.3 (from torch)
+  Using cached https://www.piwheels.org/simple/sympy/sympy-1.13.3-py3-none-any.whl (6.2 MB)
+Collecting networkx (from torch)
+  Using cached https://www.piwheels.org/simple/networkx/networkx-3.3-py3-none-any.whl (1.7 MB)
+Collecting jinja2 (from torch)
+  Using cached https://www.piwheels.org/simple/jinja2/jinja2-3.1.6-py3-none-any.whl (134 kB)
+Collecting fsspec (from torch)
+  Using cached https://www.piwheels.org/simple/fsspec/fsspec-2025.3.2-py3-none-any.whl (194 kB)
+Requirement already satisfied: numpy in ./rick_env/lib/python3.11/site-packages (from torchvision) (2.3.1)
+Collecting pillow!=8.3.*,>=5.3.0 (from torchvision)
+  Using cached https://download.pytorch.org/whl/pillow-11.0.0-cp311-cp311-manylinux_2_28_aarch64.whl.metadata (9.1 kB)
+Collecting mpmath<1.4,>=1.1.0 (from sympy>=1.13.3->torch)
+  Using cached https://www.piwheels.org/simple/mpmath/mpmath-1.3.0-py3-none-any.whl (536 kB)
+Collecting MarkupSafe>=2.0 (from jinja2->torch)
+  Using cached https://download.pytorch.org/whl/MarkupSafe-2.1.5-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (29 kB)
+Using cached https://download.pytorch.org/whl/cpu/torch-2.7.1%2Bcpu-cp311-cp311-manylinux_2_28_aarch64.whl (99.1 MB)
+Using cached https://download.pytorch.org/whl/cpu/torchvision-0.22.1-cp311-cp311-manylinux_2_28_aarch64.whl (2.5 MB)
+Using cached https://download.pytorch.org/whl/cpu/torchaudio-2.7.1-cp311-cp311-manylinux_2_28_aarch64.whl (1.7 MB)
+Using cached https://download.pytorch.org/whl/pillow-11.0.0-cp311-cp311-manylinux_2_28_aarch64.whl (4.2 MB)
+Installing collected packages: mpmath, typing-extensions, sympy, pillow, networkx, MarkupSafe, fsspec, filelock, jinja2, torch, torchvision, torchaudio
+Successfully installed MarkupSafe-2.1.5 filelock-3.18.0 fsspec-2025.3.2 jinja2-3.1.6 mpmath-1.3.0 networkx-3.3 pillow-11.0.0 sympy-1.13.3 torch-2.7.1+cpu torchaudio-2.7.1 torchvision-0.22.1 typing-extensions-4.13.0
+Looking in indexes: https://pypi.org/simple, https://www.piwheels.org/simple
+Collecting transformers
+  Using cached transformers-4.52.4-py3-none-any.whl.metadata (38 kB)
+Collecting tokenizers
+  Using cached tokenizers-0.21.1-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl.metadata (6.8 kB)
+Collecting datasets
+  Using cached datasets-3.6.0-py3-none-any.whl.metadata (19 kB)
+Collecting accelerate
+  Using cached accelerate-1.8.1-py3-none-any.whl.metadata (19 kB)
+Collecting scipy
+  Using cached scipy-1.15.3-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl.metadata (61 kB)
+Requirement already satisfied: filelock in ./rick_env/lib/python3.11/site-packages (from transformers) (3.18.0)
+Collecting huggingface-hub<1.0,>=0.30.0 (from transformers)
+  Using cached huggingface_hub-0.33.0-py3-none-any.whl.metadata (14 kB)
+Requirement already satisfied: numpy>=1.17 in ./rick_env/lib/python3.11/site-packages (from transformers) (2.3.1)
+Collecting packaging>=20.0 (from transformers)
+  Using cached packaging-25.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting pyyaml>=5.1 (from transformers)
+  Using cached PyYAML-6.0.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl.metadata (2.1 kB)
+  DEPRECATION: Wheel filename 'regex-2013_12_31-cp37-cp37m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_12_31-cp37-cp37m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_12_31-cp37-cp37m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_12_31-cp37-cp37m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_12_31-cp34-cp34m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_12_31-cp34-cp34m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_12_31-cp34-cp34m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_12_31-cp34-cp34m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_12_31-cp35-cp35m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_12_31-cp35-cp35m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_12_31-cp35-cp35m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_12_31-cp35-cp35m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_11_29-cp37-cp37m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_11_29-cp37-cp37m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_11_29-cp37-cp37m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_11_29-cp37-cp37m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_11_29-cp35-cp35m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_11_29-cp35-cp35m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_11_29-cp35-cp35m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_11_29-cp35-cp35m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_11_29-cp34-cp34m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_11_29-cp34-cp34m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_11_29-cp34-cp34m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_11_29-cp34-cp34m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_26-cp37-cp37m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_26-cp37-cp37m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_26-cp37-cp37m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_26-cp37-cp37m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_26-cp35-cp35m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_26-cp35-cp35m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_26-cp35-cp35m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_26-cp35-cp35m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_26-cp34-cp34m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_26-cp34-cp34m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_26-cp34-cp34m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_26-cp34-cp34m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_25-cp37-cp37m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_25-cp37-cp37m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_25-cp37-cp37m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_25-cp37-cp37m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_25-cp34-cp34m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_25-cp34-cp34m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_25-cp34-cp34m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_25-cp34-cp34m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_25-cp35-cp35m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_25-cp35-cp35m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_25-cp35-cp35m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_25-cp35-cp35m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_24-cp37-cp37m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_24-cp37-cp37m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_24-cp37-cp37m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_24-cp37-cp37m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_24-cp35-cp35m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_24-cp35-cp35m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_24-cp35-cp35m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_24-cp35-cp35m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_24-cp34-cp34m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_24-cp34-cp34m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_24-cp34-cp34m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_24-cp34-cp34m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_23-cp37-cp37m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_23-cp37-cp37m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_23-cp37-cp37m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_23-cp37-cp37m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_23-cp34-cp34m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_23-cp34-cp34m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_23-cp34-cp34m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_23-cp34-cp34m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_23-cp35-cp35m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_23-cp35-cp35m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_23-cp35-cp35m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_23-cp35-cp35m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_22-cp37-cp37m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_22-cp37-cp37m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_22-cp37-cp37m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_22-cp37-cp37m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_22-cp35-cp35m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_22-cp35-cp35m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_22-cp35-cp35m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_22-cp35-cp35m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_22-cp34-cp34m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_22-cp34-cp34m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_22-cp34-cp34m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_22-cp34-cp34m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_21-cp37-cp37m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_21-cp37-cp37m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_21-cp37-cp37m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_21-cp37-cp37m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_21-cp34-cp34m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_21-cp34-cp34m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_21-cp34-cp34m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_21-cp34-cp34m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_21-cp35-cp35m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_21-cp35-cp35m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_21-cp35-cp35m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_21-cp35-cp35m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_12-cp37-cp37m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_12-cp37-cp37m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_12-cp37-cp37m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_12-cp37-cp37m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_12-cp34-cp34m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_12-cp34-cp34m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_12-cp34-cp34m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_12-cp34-cp34m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_12-cp35-cp35m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_12-cp35-cp35m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_12-cp35-cp35m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_12-cp35-cp35m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_04-cp37-cp37m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_04-cp37-cp37m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_04-cp37-cp37m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_04-cp37-cp37m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_04-cp34-cp34m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_04-cp34-cp34m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_04-cp34-cp34m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_04-cp34-cp34m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_04-cp35-cp35m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_04-cp35-cp35m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_10_04-cp35-cp35m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_10_04-cp35-cp35m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_08_04-cp37-cp37m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_08_04-cp37-cp37m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_08_04-cp37-cp37m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_08_04-cp37-cp37m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_08_04-cp35-cp35m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_08_04-cp35-cp35m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_08_04-cp35-cp35m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_08_04-cp35-cp35m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_08_04-cp34-cp34m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_08_04-cp34-cp34m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_08_04-cp34-cp34m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_08_04-cp34-cp34m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_06_26-cp37-cp37m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_06_26-cp37-cp37m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_06_26-cp37-cp37m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_06_26-cp37-cp37m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_06_26-cp35-cp35m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_06_26-cp35-cp35m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_06_26-cp35-cp35m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_06_26-cp35-cp35m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_06_26-cp34-cp34m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_06_26-cp34-cp34m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_06_26-cp34-cp34m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_06_26-cp34-cp34m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_06_05-cp35-cp35m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_06_05-cp35-cp35m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_06_05-cp35-cp35m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_06_05-cp35-cp35m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_06_05-cp37-cp37m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_06_05-cp37-cp37m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_06_05-cp37-cp37m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_06_05-cp37-cp37m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_05_21-cp37-cp37m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_05_21-cp37-cp37m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_05_21-cp37-cp37m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_05_21-cp37-cp37m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_05_21-cp35-cp35m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_05_21-cp35-cp35m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_05_21-cp35-cp35m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_05_21-cp35-cp35m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_05_21-cp34-cp34m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_05_21-cp34-cp34m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_05_21-cp34-cp34m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_05_21-cp34-cp34m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_03_11-cp37-cp37m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_03_11-cp37-cp37m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_03_11-cp37-cp37m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_03_11-cp37-cp37m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_03_11-cp34-cp34m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_03_11-cp34-cp34m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_03_11-cp34-cp34m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_03_11-cp34-cp34m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_03_11-cp35-cp35m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_03_11-cp35-cp35m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_03_11-cp35-cp35m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_03_11-cp35-cp35m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_02_23-cp37-cp37m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_02_23-cp37-cp37m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_02_23-cp37-cp37m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_02_23-cp37-cp37m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_02_23-cp35-cp35m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_02_23-cp35-cp35m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_02_23-cp35-cp35m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_02_23-cp35-cp35m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_02_23-cp34-cp34m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_02_23-cp34-cp34m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_02_23-cp34-cp34m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_02_23-cp34-cp34m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_02_16-cp37-cp37m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_02_16-cp37-cp37m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_02_16-cp37-cp37m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_02_16-cp37-cp37m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_02_16-cp34-cp34m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_02_16-cp34-cp34m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_02_16-cp34-cp34m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_02_16-cp34-cp34m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_02_16-cp35-cp35m-linux_armv6l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_02_16-cp35-cp35m-linux_armv6l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'regex-2013_02_16-cp35-cp35m-linux_armv7l.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'regex-2013_02_16-cp35-cp35m-linux_armv7l'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+Collecting regex!=2019.12.17 (from transformers)
+  Using cached regex-2024.11.6-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl.metadata (40 kB)
+Requirement already satisfied: requests in ./rick_env/lib/python3.11/site-packages (from transformers) (2.32.4)
+Collecting safetensors>=0.4.3 (from transformers)
+  Using cached safetensors-0.5.3-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl.metadata (3.8 kB)
+Collecting tqdm>=4.27 (from transformers)
+  Using cached https://www.piwheels.org/simple/tqdm/tqdm-4.67.1-py3-none-any.whl (78 kB)
+Requirement already satisfied: fsspec>=2023.5.0 in ./rick_env/lib/python3.11/site-packages (from huggingface-hub<1.0,>=0.30.0->transformers) (2025.3.2)
+Requirement already satisfied: typing-extensions>=3.7.4.3 in ./rick_env/lib/python3.11/site-packages (from huggingface-hub<1.0,>=0.30.0->transformers) (4.13.0)
+Collecting hf-xet<2.0.0,>=1.1.2 (from huggingface-hub<1.0,>=0.30.0->transformers)
+  Using cached hf_xet-1.1.5-cp37-abi3-manylinux_2_28_aarch64.whl.metadata (879 bytes)
+Collecting pyarrow>=15.0.0 (from datasets)
+  Using cached pyarrow-20.0.0-cp311-cp311-manylinux_2_28_aarch64.whl.metadata (3.3 kB)
+Collecting dill<0.3.9,>=0.3.0 (from datasets)
+  Using cached https://www.piwheels.org/simple/dill/dill-0.3.8-py3-none-any.whl (116 kB)
+Collecting pandas (from datasets)
+  Using cached pandas-2.3.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl.metadata (91 kB)
+Collecting xxhash (from datasets)
+  Using cached xxhash-3.5.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl.metadata (12 kB)
+Collecting multiprocess<0.70.17 (from datasets)
+  Using cached multiprocess-0.70.16-py311-none-any.whl.metadata (7.2 kB)
+Collecting fsspec>=2023.5.0 (from huggingface-hub<1.0,>=0.30.0->transformers)
+  Using cached https://www.piwheels.org/simple/fsspec/fsspec-2025.3.0-py3-none-any.whl (193 kB)
+Collecting aiohttp!=4.0.0a0,!=4.0.0a1 (from fsspec[http]<=2025.3.0,>=2023.1.0->datasets)
+  Using cached aiohttp-3.12.13-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl.metadata (7.6 kB)
+Collecting psutil (from accelerate)
+  Using cached psutil-7.0.0-cp36-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl.metadata (22 kB)
+Requirement already satisfied: torch>=2.0.0 in ./rick_env/lib/python3.11/site-packages (from accelerate) (2.7.1+cpu)
+Collecting aiohappyeyeballs>=2.5.0 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2025.3.0,>=2023.1.0->datasets)
+  Using cached https://www.piwheels.org/simple/aiohappyeyeballs/aiohappyeyeballs-2.6.1-py3-none-any.whl (15 kB)
+Collecting aiosignal>=1.1.2 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2025.3.0,>=2023.1.0->datasets)
+  Using cached https://www.piwheels.org/simple/aiosignal/aiosignal-1.3.2-py2.py3-none-any.whl (7.6 kB)
+Collecting attrs>=17.3.0 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2025.3.0,>=2023.1.0->datasets)
+  Using cached https://www.piwheels.org/simple/attrs/attrs-25.3.0-py3-none-any.whl (63 kB)
+Collecting frozenlist>=1.1.1 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2025.3.0,>=2023.1.0->datasets)
+  Using cached frozenlist-1.7.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl.metadata (18 kB)
+Collecting multidict<7.0,>=4.5 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2025.3.0,>=2023.1.0->datasets)
+  Using cached multidict-6.5.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl.metadata (5.3 kB)
+Collecting propcache>=0.2.0 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2025.3.0,>=2023.1.0->datasets)
+  Using cached propcache-0.3.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl.metadata (12 kB)
+Collecting yarl<2.0,>=1.17.0 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2025.3.0,>=2023.1.0->datasets)
+  Using cached yarl-1.20.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl.metadata (73 kB)
+Requirement already satisfied: idna>=2.0 in ./rick_env/lib/python3.11/site-packages (from yarl<2.0,>=1.17.0->aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2025.3.0,>=2023.1.0->datasets) (3.10)
+Requirement already satisfied: charset_normalizer<4,>=2 in ./rick_env/lib/python3.11/site-packages (from requests->transformers) (3.4.2)
+Requirement already satisfied: urllib3<3,>=1.21.1 in ./rick_env/lib/python3.11/site-packages (from requests->transformers) (2.5.0)
+Requirement already satisfied: certifi>=2017.4.17 in ./rick_env/lib/python3.11/site-packages (from requests->transformers) (2025.6.15)
+Requirement already satisfied: sympy>=1.13.3 in ./rick_env/lib/python3.11/site-packages (from torch>=2.0.0->accelerate) (1.13.3)
+Requirement already satisfied: networkx in ./rick_env/lib/python3.11/site-packages (from torch>=2.0.0->accelerate) (3.3)
+Requirement already satisfied: jinja2 in ./rick_env/lib/python3.11/site-packages (from torch>=2.0.0->accelerate) (3.1.6)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in ./rick_env/lib/python3.11/site-packages (from sympy>=1.13.3->torch>=2.0.0->accelerate) (1.3.0)
+Requirement already satisfied: MarkupSafe>=2.0 in ./rick_env/lib/python3.11/site-packages (from jinja2->torch>=2.0.0->accelerate) (2.1.5)
+Collecting python-dateutil>=2.8.2 (from pandas->datasets)
+  Using cached https://www.piwheels.org/simple/python-dateutil/python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+  DEPRECATION: Wheel filename 'pytz-2013d-py3-none-any.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'pytz-2013d-py3-none-any'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'pytz-2012j-py3-none-any.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'pytz-2012j-py3-none-any'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'pytz-2012h-py3-none-any.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'pytz-2012h-py3-none-any'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'pytz-2012g-py3-none-any.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'pytz-2012g-py3-none-any'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'pytz-2012f-py3-none-any.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'pytz-2012f-py3-none-any'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'pytz-2012d-py3-none-any.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'pytz-2012d-py3-none-any'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'pytz-2011n-py3-none-any.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'pytz-2011n-py3-none-any'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'pytz-2011k-py3-none-any.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'pytz-2011k-py3-none-any'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'pytz-2011j-py3-none-any.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'pytz-2011j-py3-none-any'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'pytz-2011h-py3-none-any.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'pytz-2011h-py3-none-any'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'pytz-2011g-py3-none-any.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'pytz-2011g-py3-none-any'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'pytz-2011e-py3-none-any.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'pytz-2011e-py3-none-any'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+  DEPRECATION: Wheel filename 'pytz-2011d-py3-none-any.whl' is not correctly normalised. Future versions of pip will raise the following error:
+  Invalid wheel filename (invalid version): 'pytz-2011d-py3-none-any'
+  
+   pip 25.3 will enforce this behaviour change. A possible replacement is to rename the wheel to use a correctly normalised name (this may require updating the version in the project metadata). Discussion can be found at https://github.com/pypa/pip/issues/12938
+Collecting pytz>=2020.1 (from pandas->datasets)
+  Using cached https://www.piwheels.org/simple/pytz/pytz-2025.2-py3-none-any.whl (509 kB)
+Collecting tzdata>=2022.7 (from pandas->datasets)
+  Using cached https://www.piwheels.org/simple/tzdata/tzdata-2025.2-py2.py3-none-any.whl (347 kB)
+Collecting six>=1.5 (from python-dateutil>=2.8.2->pandas->datasets)
+  Using cached https://www.piwheels.org/simple/six/six-1.17.0-py2.py3-none-any.whl (11 kB)
+Using cached transformers-4.52.4-py3-none-any.whl (10.5 MB)
+Using cached tokenizers-0.21.1-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (2.9 MB)
+Using cached huggingface_hub-0.33.0-py3-none-any.whl (514 kB)
+Using cached hf_xet-1.1.5-cp37-abi3-manylinux_2_28_aarch64.whl (3.0 MB)
+Using cached datasets-3.6.0-py3-none-any.whl (491 kB)
+Using cached multiprocess-0.70.16-py311-none-any.whl (143 kB)
+Using cached accelerate-1.8.1-py3-none-any.whl (365 kB)
+Using cached scipy-1.15.3-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (35.5 MB)
+Using cached aiohttp-3.12.13-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (1.7 MB)
+Using cached multidict-6.5.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (236 kB)
+Using cached yarl-1.20.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (347 kB)
+Using cached frozenlist-1.7.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (237 kB)
+Using cached packaging-25.0-py3-none-any.whl (66 kB)
+Using cached propcache-0.3.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (217 kB)
+Using cached pyarrow-20.0.0-cp311-cp311-manylinux_2_28_aarch64.whl (40.7 MB)
+Using cached PyYAML-6.0.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (736 kB)
+Using cached regex-2024.11.6-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (792 kB)
+Using cached safetensors-0.5.3-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (459 kB)
+Using cached pandas-2.3.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (11.8 MB)
+Using cached psutil-7.0.0-cp36-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (279 kB)
+Using cached xxhash-3.5.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl (221 kB)
+Installing collected packages: pytz, xxhash, tzdata, tqdm, six, scipy, safetensors, regex, pyyaml, pyarrow, psutil, propcache, packaging, multidict, hf-xet, fsspec, frozenlist, dill, attrs, aiohappyeyeballs, yarl, python-dateutil, multiprocess, huggingface-hub, aiosignal, tokenizers, pandas, aiohttp, accelerate, transformers, datasets
+  Attempting uninstall: fsspec
+    Found existing installation: fsspec 2025.3.2
+    Uninstalling fsspec-2025.3.2:
+      Successfully uninstalled fsspec-2025.3.2
+Successfully installed accelerate-1.8.1 aiohappyeyeballs-2.6.1 aiohttp-3.12.13 aiosignal-1.3.2 attrs-25.3.0 datasets-3.6.0 dill-0.3.8 frozenlist-1.7.0 fsspec-2025.3.0 hf-xet-1.1.5 huggingface-hub-0.33.0 multidict-6.5.0 multiprocess-0.70.16 packaging-25.0 pandas-2.3.0 propcache-0.3.2 psutil-7.0.0 pyarrow-20.0.0 python-dateutil-2.9.0.post0 pytz-2025.2 pyyaml-6.0.2 regex-2024.11.6 safetensors-0.5.3 scipy-1.15.3 six-1.17.0 tokenizers-0.21.1 tqdm-4.67.1 transformers-4.52.4 tzdata-2025.2 xxhash-3.5.0 yarl-1.20.1
+📝 Creating requirements.txt...
+🤖 Pre-downloading traditional model (backup option)...
+Downloading DialoGPT-small as backup...
+Traditional model downloaded successfully!
+✅ rick_chatbot.py verified in project directory
+🚀 Creating start script...
+🔧 Creating systemd service file...
+
+🎉 Setup Complete!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📁 Project directory: /home/thebeast/rick_chatbot
+🐍 Virtual environment: /home/thebeast/rick_chatbot/rick_env
+🧠 Installed models: 4
+🎯 Default model: phi3:mini
+
+🚀 To start the chatbot:
+   cd /home/thebeast/rick_chatbot
+   ./start_rick.sh
+
+Or manually:
+   cd /home/thebeast/rick_chatbot
+   source rick_env/bin/activate
+   python3 rick_chatbot.py
+
+🔧 To install as a system service:
+   sudo cp rick-chatbot.service /etc/systemd/system/
+   sudo systemctl enable rick-chatbot
+   sudo systemctl start rick-chatbot
+
+🔍 To verify virtual environment:
+   cd /home/thebeast/rick_chatbot
+   source rick_env/bin/activate
+   which python3
+   pip list
+
+*burp* Wubba lubba dub dub! Your Rick chatbot is ready!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
