@@ -13,14 +13,16 @@ import time
 # Ollama API endpoint
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
-# Available models (in order of preference)
+# Available models (in order of preference) - REORDERED AS REQUESTED
 RECOMMENDED_MODELS = [
-    "gemma2:2b-instruct",      # Google's efficient instruction model
-    "llama3.2:3b-instruct",   # Meta's instruction model
     "phi3:mini",              # Microsoft's knowledge model
     "qwen2.5:3b-instruct",    # Alibaba's reasoning model
+    "qwen2:1.5b",             # Qwen 1.5B model
     "llama3.2:1b-instruct",   # Lightweight option
-    "gemma:2b-instruct-q4_K_M" # Your suggested model
+    "llama3.2:3b-instruct",   # Meta's instruction model
+    "gemma2:2b-instruct",     # Google's efficient instruction model
+    "gemma:2b-instruct-q4_K_M", # Your suggested model
+    "gemma:2b"                # Google Gemma 2B model
 ]
 
 # Rick's personality responses
@@ -169,14 +171,14 @@ def main():
         print("\nTo fix this:")
         print("1. Install Ollama: https://ollama.ai")
         print("2. Start Ollama: ollama serve")
-        print("3. Install a model: ollama pull gemma2:2b-instruct")
+        print("3. Install a model: ollama pull phi3:mini")
         print("4. Run this script again")
         return 1
     
     if not available_models:
         print("❌ No models found in Ollama!")
-        print("Install a recommended model:")
-        for model in RECOMMENDED_MODELS[:3]:
+        print("Install a recommended model (in priority order):")
+        for model in RECOMMENDED_MODELS[:4]:
             print(f"   ollama pull {model}")
         return 1
     
