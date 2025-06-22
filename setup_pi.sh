@@ -64,6 +64,17 @@ echo "📁 Creating project directory at $PROJECT_DIR"
 mkdir -p "$PROJECT_DIR"
 cd "$PROJECT_DIR"
 
+# Download the main chatbot file directly from GitHub
+echo "📥 Downloading rick_chatbot.py from GitHub..."
+if curl -L -o rick_chatbot.py "https://raw.githubusercontent.com/soundcatchers/rick-chatbot/main/rick_chatbot.py"; then
+    echo "✅ rick_chatbot.py downloaded successfully!"
+    chmod +x rick_chatbot.py
+else
+    echo "❌ Failed to download rick_chatbot.py from GitHub"
+    echo "Please check your internet connection and try again."
+    exit 1
+fi
+
 # Install Ollama
 echo "🤖 Installing Ollama..."
 if ! command -v ollama &> /dev/null; then
@@ -279,23 +290,28 @@ except Exception as e:
     print('Ollama models will be used instead.')
 "
 
-# Copy the rick_chatbot.py from the current directory if it exists
-if [ -f "../rick_chatbot.py" ]; then
-    echo "📋 Copying existing rick_chatbot.py..."
-    cp ../rick_chatbot.py ./
-    echo "✅ rick_chatbot.py copied successfully!"
-elif [ -f "./rick_chatbot.py" ]; then
-    echo "✅ rick_chatbot.py already exists in project directory"
-else
-    echo "⚠️  rick_chatbot.py not found. Please copy it to this directory."
-    echo "Expected location: $PROJECT_DIR/rick_chatbot.py"
+# Verify the chatbot file exists
+if [ ! -f "rick_chatbot.py" ]; then
+    echo "❌ Error: rick_chatbot.py not found after download!"
+    echo "Please check your internet connection and GitHub repository."
+    exit 1
 fi
+
+echo "✅ rick_chatbot.py verified in project directory"
 
 # Create start script
 echo "🚀 Creating start script..."
 cat > start_rick.sh << 'EOF'
 #!/bin/bash
 cd ~/rick_chatbot
+
+# Check if rick_chatbot.py exists
+if [ ! -f "rick_chatbot.py" ]; then
+    echo "❌ Error: rick_chatbot.py not found!"
+    echo "Please run the setup script again or manually copy the file."
+    exit 1
+fi
+
 source rick_env/bin/activate
 
 # Check if Ollama is running, start if needed
