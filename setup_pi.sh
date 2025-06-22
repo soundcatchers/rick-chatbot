@@ -146,37 +146,36 @@ pull_model() {
     return 1
 }
 
-# Install models (starting with the most reliable ones)
+# Install models (REORDERED AS REQUESTED)
 MODELS_INSTALLED=0
 
-# Updated model names - these are the correct ones as of late 2024/early 2025
-echo "🔍 Attempting to install models with correct names..."
+echo "🔍 Installing models in preferred order..."
 
-# Try Gemma 2B (most likely to work)
-if pull_model "gemma:2b" "Google Gemma 2B model"; then
-    MODELS_INSTALLED=$((MODELS_INSTALLED + 1))
-    DEFAULT_MODEL="gemma:2b"
-fi
-
-# Try Llama 3.2 (check if available)
-if pull_model "llama3.2:1b" "Meta Llama 3.2 1B model"; then
-    MODELS_INSTALLED=$((MODELS_INSTALLED + 1))
-    [ -z "$DEFAULT_MODEL" ] && DEFAULT_MODEL="llama3.2:1b"
-fi
-
-# Try Phi-3 mini
+# Try Phi3 mini first (Microsoft model - your #1 choice)
 if pull_model "phi3:mini" "Microsoft Phi-3 mini model"; then
     MODELS_INSTALLED=$((MODELS_INSTALLED + 1))
-    [ -z "$DEFAULT_MODEL" ] && DEFAULT_MODEL="phi3:mini"
+    DEFAULT_MODEL="phi3:mini"
 fi
 
-# Try Qwen (good alternative)
+# Try Qwen 1.5B second (your #2 choice)
 if pull_model "qwen2:1.5b" "Qwen 1.5B model"; then
     MODELS_INSTALLED=$((MODELS_INSTALLED + 1))
     [ -z "$DEFAULT_MODEL" ] && DEFAULT_MODEL="qwen2:1.5b"
 fi
 
-# If none of the above worked, try some fallback options
+# Try Llama 3.2 1B third (your #3 choice)
+if pull_model "llama3.2:1b" "Meta Llama 3.2 1B model"; then
+    MODELS_INSTALLED=$((MODELS_INSTALLED + 1))
+    [ -z "$DEFAULT_MODEL" ] && DEFAULT_MODEL="llama3.2:1b"
+fi
+
+# Try Gemma 2B last (your #4 choice)
+if pull_model "gemma:2b" "Google Gemma 2B model"; then
+    MODELS_INSTALLED=$((MODELS_INSTALLED + 1))
+    [ -z "$DEFAULT_MODEL" ] && DEFAULT_MODEL="gemma:2b"
+fi
+
+# If none of the preferred models worked, try some additional fallback options
 if [ $MODELS_INSTALLED -eq 0 ]; then
     echo "⚠️  Primary models failed, trying fallback options..."
     
@@ -209,10 +208,11 @@ if [ $MODELS_INSTALLED -eq 0 ]; then
     echo "⚠️  You can manually install models later using:"
     echo "   ollama pull <model_name>"
     echo ""
-    echo "Some models to try manually:"
-    echo "   ollama pull tinyllama"
-    echo "   ollama pull phi3:mini"
-    echo "   ollama pull gemma:2b"
+    echo "Recommended models to try manually (in priority order):"
+    echo "   ollama pull phi3:mini      # Microsoft Phi-3 (recommended #1)"
+    echo "   ollama pull qwen2:1.5b     # Qwen 1.5B (recommended #2)"
+    echo "   ollama pull llama3.2:1b    # Llama 3.2 1B (recommended #3)"
+    echo "   ollama pull gemma:2b       # Google Gemma 2B (recommended #4)"
 fi
 
 echo "✅ Installed $MODELS_INSTALLED Ollama models"
@@ -367,12 +367,15 @@ class OllamaClient:
         """Select the best available model"""
         models = self.get_models()
         
-        # Updated priority order with correct model names
+        # Updated priority order with your preferred sequence
         preferred_models = [
-            "gemma:2b",
-            "llama3.2:1b",
-            "phi3:mini",
-            "qwen2:1.5b",
+            "phi3:mini",         # Microsoft Phi-3 (your #1 choice)
+            "qwen2:1.5b",        # Qwen 1.5B (your #2 choice)  
+            "llama3.2:1b",       # Llama 3.2 1B (your #3 choice)
+            "gemma:2b",          # Google Gemma 2B (your #4 choice)
+            "qwen2.5:3b-instruct",
+            "llama3.2:3b-instruct",
+            "gemma2:2b-instruct",
             "tinyllama",
             "phi3:3.8b",
             "gemma:7b"
@@ -505,303 +508,4 @@ def main():
     if not use_ollama:
         tokenizer, traditional_model = traditional_fallback()
         if not traditional_model:
-            print(f"{Fore.RED}❌ No AI backend available!{Style.RESET_ALL}")
-            print("Please ensure either:")
-            print("1. Ollama is running with models installed")
-            print("2. Traditional transformers models are downloaded")
-            print("\nTry running: ollama pull tinyllama")
-            return 1
-    
-    print(f"{Fore.GREEN}✅ Ready to chat!{Style.RESET_ALL}")
-    print(f"{Fore.MAGENTA}{random.choice(RICK_INTROS)}{Style.RESET_ALL}")
-    print(f"\n{Fore.CYAN}Type 'quit', 'exit', or 'bye' to exit{Style.RESET_ALL}")
-    print(f"{Fore.CYAN}Type 'models' to see available Ollama models{Style.RESET_ALL}\n")
-    
-    # Chat loop
-    conversation_history = []
-    chat_history_ids = None
-    
-    while True:
-        try:
-            user_input = input(f"{Fore.BLUE}You: {Style.RESET_ALL}").strip()
-            
-            if not user_input:
-                continue
-                
-            if user_input.lower() in ['quit', 'exit', 'bye', 'q']:
-                print(f"{Fore.MAGENTA}Rick: {random.choice(RICK_EXITS)}{Style.RESET_ALL}")
-                break
-                
-            if user_input.lower() == 'models' and use_ollama:
-                models = ollama.get_models()
-                print(f"{Fore.CYAN}Available models: {', '.join(models)}{Style.RESET_ALL}")
-                print(f"{Fore.CYAN}Current model: {ollama.current_model}{Style.RESET_ALL}")
-                continue
-            
-            print(f"{Fore.MAGENTA}Rick: {Style.RESET_ALL}", end="", flush=True)
-            
-            if use_ollama:
-                # Use Ollama
-                response = ollama.chat(user_input, conversation_history[-6:])  # Keep last 3 exchanges
-                print()  # New line after streaming response
-                
-                # Update conversation history
-                conversation_history.append({"role": "user", "content": user_input})
-                conversation_history.append({"role": "assistant", "content": response})
-                
-            else:
-                # Use traditional approach
-                print("*thinking*", end="", flush=True)
-                
-                new_user_input_ids = tokenizer.encode(
-                    user_input + tokenizer.eos_token, 
-                    return_tensors='pt',
-                    max_length=512,
-                    truncation=True
-                )
-                
-                if chat_history_ids is not None:
-                    bot_input_ids = torch.cat([chat_history_ids, new_user_input_ids], dim=-1)
-                    if bot_input_ids.shape[-1] > 800:
-                        bot_input_ids = bot_input_ids[:, -400:]
-                else:
-                    bot_input_ids = new_user_input_ids
-                    
-                with torch.no_grad():
-                    chat_history_ids = traditional_model.generate(
-                        bot_input_ids, 
-                        max_length=bot_input_ids.shape[-1] + 50,
-                        num_beams=3,
-                        no_repeat_ngram_size=2,
-                        do_sample=True,
-                        temperature=0.8,
-                        top_p=0.9,
-                        pad_token_id=tokenizer.eos_token_id,
-                        attention_mask=torch.ones_like(bot_input_ids)
-                    )
-                
-                print("\r" + " " * 20 + "\r", end="")
-                
-                response = tokenizer.decode(
-                    chat_history_ids[:, bot_input_ids.shape[-1]:][0], 
-                    skip_special_tokens=True
-                ).strip()
-                
-                if not response:
-                    response = "*burp* I don't know what to say to that."
-                
-                response = add_rick_flavor(response)
-                print(response)
-                
-        except KeyboardInterrupt:
-            print(f"\n\n{Fore.MAGENTA}Rick: {random.choice(RICK_EXITS)}{Style.RESET_ALL}")
-            break
-        except Exception as e:
-            print(f"\n{Fore.RED}Rick: *burp* Aw jeez, something went wrong: {str(e)}{Style.RESET_ALL}")
-            print("Let's try again...")
-            continue
-    
-    return 0
-
-if __name__ == "__main__":
-    exit(main())
-EOF
-
-chmod +x rick_chatbot.py
-
-# Create enhanced startup script
-echo "🚀 Creating enhanced startup script..."
-cat > start_rick.sh << 'EOF'
-#!/bin/bash
-# Rick Sanchez Enhanced Chatbot Startup Script
-
-cd "$HOME/rick_chatbot"
-
-# Check if Ollama is running, start if needed
-if ! pgrep -f "ollama serve" > /dev/null; then
-    echo "🤖 Starting Ollama server..."
-    nohup ollama serve > ollama.log 2>&1 &
-    sleep 3
-fi
-
-# Activate Python environment and start chatbot
-source rick_env/bin/activate
-python3 rick_chatbot.py
-EOF
-
-chmod +x start_rick.sh
-
-# Create updated model management script
-echo "🧠 Creating model management script..."
-cat > manage_models.sh << 'EOF'
-#!/bin/bash
-# Ollama Model Management for Rick Chatbot
-
-echo "🤖 Rick's Model Management"
-echo "*burp* Managing AI models like a boss..."
-
-case "${1:-menu}" in
-    "list")
-        echo "📋 Available models:"
-        ollama list
-        ;;
-    "install")
-        echo "📥 Installing recommended models..."
-        echo "This will take a while, so grab a drink... *burp*"
-        
-        # Updated model list with correct names
-        models=(
-            "gemma:2b"
-            "llama3.2:1b"
-            "phi3:mini"
-            "qwen2:1.5b"
-            "tinyllama"
-        )
-        
-        for model in "${models[@]}"; do
-            echo "Installing $model..."
-            if timeout 600 ollama pull "$model"; then
-                echo "✅ $model installed successfully"
-            else
-                echo "❌ Failed to install $model"
-            fi
-        done
-        ;;
-    "remove")
-        if [ -n "$2" ]; then
-            echo "🗑️ Removing model: $2"
-            ollama rm "$2"
-        else
-            echo "Usage: $0 remove <model_name>"
-        fi
-        ;;
-    "update")
-        echo "🔄 Updating all models..."
-        ollama list | tail -n +2 | awk '{print $1}' | xargs -I {} ollama pull {}
-        ;;
-    "test")
-        echo "🧪 Testing available models..."
-        models=$(ollama list | tail -n +2 | awk '{print $1}')
-        for model in $models; do
-            echo "Testing $model..."
-            echo "Hello" | ollama run "$model" --verbose 2>&1 | head -3
-            echo "---"
-        done
-        ;;
-    *)
-        echo "🧪 Model Management Options:"
-        echo "  $0 list     - List installed models"
-        echo "  $0 install  - Install recommended models"
-        echo "  $0 remove   - Remove a specific model"
-        echo "  $0 update   - Update all models"
-        echo "  $0 test     - Test all installed models"
-        echo ""
-        echo "Manual installation examples:"
-        echo "  ollama pull tinyllama"
-        echo "  ollama pull gemma:2b"
-        echo "  ollama pull phi3:mini"
-        ;;
-esac
-EOF
-
-chmod +x manage_models.sh
-
-# Create symlinks for easy access
-echo "🔗 Creating symlinks for easy access..."
-mkdir -p ~/.local/bin
-ln -sf "$PROJECT_DIR/start_rick.sh" ~/.local/bin/start_rick
-ln -sf "$PROJECT_DIR/manage_models.sh" ~/.local/bin/rick_models
-
-# Add ~/.local/bin to PATH if not already there
-if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-    echo "📝 Added ~/.local/bin to PATH in ~/.bashrc"
-    echo "⚠️  Run 'source ~/.bashrc' or restart terminal for PATH changes to take effect"
-fi
-
-# Create enhanced desktop shortcut
-echo "🎯 Creating desktop shortcuts..."
-mkdir -p "$HOME/Desktop"
-
-cat > "$HOME/Desktop/Rick Chatbot Enhanced.desktop" << EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Rick Chatbot Enhanced
-Comment=Talk to Rick Sanchez (AI Enhanced)
-Exec=$PROJECT_DIR/start_rick.sh
-Icon=applications-science
-Terminal=true
-Categories=Science;Education;
-EOF
-
-chmod +x "$HOME/Desktop/Rick Chatbot Enhanced.desktop"
-
-# Verify installation
-echo ""
-echo "🔍 Verifying installation..."
-
-# Check files
-REQUIRED_FILES=("rick_chatbot.py" "start_rick.sh" "manage_models.sh")
-ALL_GOOD=true
-
-for file in "${REQUIRED_FILES[@]}"; do
-    if [ -f "$file" ]; then
-        echo "✅ $file created successfully"
-    else
-        echo "❌ Failed to create $file"
-        ALL_GOOD=false
-    fi
-done
-
-# Check Ollama
-if command -v ollama &> /dev/null; then
-    echo "✅ Ollama installed successfully"
-    if ollama list | grep -q "NAME"; then
-        MODEL_COUNT=$(ollama list | tail -n +2 | wc -l)
-        echo "✅ $MODEL_COUNT Ollama models installed"
-        
-        # Show which models were installed
-        echo "📋 Installed models:"
-        ollama list | tail -n +2 | awk '{print "   - " $1}'
-    else
-        echo "⚠️  Ollama installed but no models found"
-        echo "💡 Try running: rick_models install"
-    fi
-else
-    echo "❌ Ollama installation failed"
-    ALL_GOOD=false
-fi
-
-# Final status
-if [ "$ALL_GOOD" = true ]; then
-    echo "✅ Installation completed successfully!"
-else
-    echo "❌ Some components failed to install. Check the output above."
-fi
-
-echo ""
-echo "🎉 Enhanced Setup Complete!"
-echo ""
-echo "*burp* Your Pi is now equipped with ADVANCED interdimensional chatting!"
-echo ""
-echo "🚀 Available Commands:"
-echo "1. start_rick          - Enhanced chatbot (Ollama + fallback)"
-echo "2. rick_models         - Manage AI models"
-echo "3. $PROJECT_DIR/start_rick.sh - Full path option"
-echo ""
-echo "📚 Model Management:"
-echo "- rick_models list     - See installed models"
-echo "- rick_models install  - Install recommended models"
-echo "- rick_models update   - Update all models"
-echo "- rick_models test     - Test all models"
-echo ""
-echo "🔧 Troubleshooting:"
-echo "If no models installed, try manually:"
-echo "- ollama pull tinyllama    (smallest, fastest)"
-echo "- ollama pull gemma:2b     (good balance)"
-echo "- ollama pull phi3:mini    (Microsoft model)"
-echo ""
-echo "💡 Pro Tips:"
-echo "- First run will be slower while models load"
-echo "- Use 'rick_models test' to check if models work"
+            print(f"{Fore.RED}❌ No AI
