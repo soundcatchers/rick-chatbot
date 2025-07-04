@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Rick Sanchez Chatbot - Enhanced Edition with Internet Search
+Rick Sanchez Chatbot - Enhanced Edition with Internet Search (FIXED)
 Supports both Ollama and traditional transformers with Google search integration
 """
 
@@ -13,7 +13,12 @@ import time
 import urllib.parse
 from colorama import init, Fore, Style
 import re
-from bs4 import BeautifulSoup
+try:
+    from bs4 import BeautifulSoup
+    HAS_BS4 = True
+except ImportError:
+    HAS_BS4 = False
+    print(f"{Fore.YELLOW}Consider installing beautifulsoup4 for better search results: pip install beautifulsoup4{Style.RESET_ALL}")
 
 # Initialize colorama for colored output
 init(autoreset=True)
@@ -97,19 +102,23 @@ class InternetSearch:
             # Use DuckDuckGo instant answer API
             url = f"https://api.duckduckgo.com/?q={urllib.parse.quote_plus(query)}&format=json&no_html=1&skip_disambig=1"
             
-            response = requests.get(url, timeout=10)
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+            
+            response = requests.get(url, headers=headers, timeout=10)
             if response.status_code == 200:
                 data = response.json()
                 
                 results = []
                 
+                # Get answer if available (prioritize this)
+                if data.get('Answer'):
+                    results.append(data['Answer'])
+                
                 # Get abstract if available
                 if data.get('Abstract'):
                     results.append(data['Abstract'])
-                
-                # Get answer if available
-                if data.get('Answer'):
-                    results.insert(0, data['Answer'])
                 
                 # Get definition if available
                 if data.get('Definition'):
@@ -131,7 +140,9 @@ class InternetSearch:
                             if isinstance(value, str) and len(value) > 20:
                                 results.append(value)
                 
-                return results[:max_results] if results else None
+                # Filter out empty results
+                filtered_results = [r for r in results if r and len(r.strip()) > 10]
+                return filtered_results[:max_results] if filtered_results else None
                 
         except Exception as e:
             print(f"{Fore.RED}DuckDuckGo search error: {str(e)}{Style.RESET_ALL}")
@@ -140,27 +151,45 @@ class InternetSearch:
     def search_wikipedia_api(self, query):
         """Search Wikipedia using their API"""
         try:
-            # Search for pages
-            search_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote_plus(query)}"
+            # First search for pages
+            search_url = f"https://en.wikipedia.org/w/api.php"
+            search_params = {
+                'action': 'query',
+                'format': 'json',
+                'list': 'search',
+                'srsearch': query,
+                'srlimit': 1
+            }
             
-            response = requests.get(search_url, timeout=10)
+            response = requests.get(search_url, params=search_params, timeout=10)
             if response.status_code == 200:
                 data = response.json()
                 
-                results = []
-                
-                # Get extract
-                if data.get('extract'):
-                    results.append(data['extract'])
-                
-                return results if results else None
+                if 'query' in data and 'search' in data['query'] and data['query']['search']:
+                    # Get the first result's title
+                    title = data['query']['search'][0]['title']
+                    
+                    # Now get the summary
+                    summary_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote_plus(title)}"
+                    summary_response = requests.get(summary_url, timeout=10)
+                    
+                    if summary_response.status_code == 200:
+                        summary_data = summary_response.json()
+                        
+                        results = []
+                        
+                        # Get extract
+                        if summary_data.get('extract'):
+                            results.append(summary_data['extract'])
+                        
+                        return results if results else None
                 
         except Exception as e:
             print(f"{Fore.RED}Wikipedia search error: {str(e)}{Style.RESET_ALL}")
             return None
     
     def search_google_simple(self, query):
-        """Simple Google search using requests-html alternative"""
+        """Simple Google search scraping"""
         try:
             # Use a simple approach to get Google results
             encoded_query = urllib.parse.quote_plus(query)
@@ -174,34 +203,102 @@ class InternetSearch:
             
             if response.status_code == 200:
                 # Try to parse with BeautifulSoup if available
-                try:
+                if HAS_BS4:
                     soup = BeautifulSoup(response.text, 'html.parser')
                     
-                    # Look for featured snippets
-                    featured_snippet = soup.find('div', {'class': 'BNeawe'})
+                    results = []
+                    
+                    # Look for featured snippets first
+                    featured_snippet = soup.find('div', {'data-attrid': 'wa:/description'})
                     if featured_snippet:
                         text = featured_snippet.get_text().strip()
                         if text and len(text) > 20:
-                            return [text]
-                    
-                    # Look for search result snippets
-                    results = []
-                    for div in soup.find_all('div', {'class': 'BNeawe'}):
-                        text = div.get_text().strip()
-                        if text and len(text) > 20 and len(text) < 300:
                             results.append(text)
+                    
+                    # Look for other snippets
+                    for div in soup.find_all('div', {'class': ['BNeawe', 'VwiC3b']}):
+                        text = div.get_text().strip()
+                        if text and len(text) > 20 and len(text) < 500:
+                            # Avoid duplicates
+                            if not any(existing in text or text in existing for existing in results):
+                                results.append(text)
+                        if len(results) >= 3:
+                            break
+                    
+                    # Look for search result descriptions
+                    for span in soup.find_all('span', {'class': 'st'}):
+                        text = span.get_text().strip()
+                        if text and len(text) > 20:
+                            if not any(existing in text or text in existing for existing in results):
+                                results.append(text)
                         if len(results) >= 3:
                             break
                     
                     return results if results else None
+                else:
+                    # Very basic fallback without BeautifulSoup
+                    # Look for basic patterns in the HTML
+                    import re
                     
-                except ImportError:
-                    # Fallback without BeautifulSoup
-                    print(f"{Fore.YELLOW}Install beautifulsoup4 for better search results: pip install beautifulsoup4{Style.RESET_ALL}")
-                    return None
+                    # Look for basic content patterns
+                    patterns = [
+                        r'<div[^>]*>([^<]{50,300})</div>',
+                        r'<span[^>]*>([^<]{50,300})</span>',
+                        r'<p[^>]*>([^<]{50,300})</p>'
+                    ]
+                    
+                    results = []
+                    for pattern in patterns:
+                        matches = re.findall(pattern, response.text)
+                        for match in matches[:3]:
+                            clean_text = re.sub(r'<[^>]+>', '', match).strip()
+                            if clean_text and len(clean_text) > 20:
+                                results.append(clean_text)
+                        if results:
+                            break
+                    
+                    return results if results else None
                     
         except Exception as e:
             print(f"{Fore.RED}Google search error: {str(e)}{Style.RESET_ALL}")
+            return None
+    
+    def search_bing_api(self, query):
+        """Search using Bing (simple scraping approach)"""
+        try:
+            encoded_query = urllib.parse.quote_plus(query)
+            url = f"https://www.bing.com/search?q={encoded_query}"
+            
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 200 and HAS_BS4:
+                soup = BeautifulSoup(response.text, 'html.parser')
+                
+                results = []
+                
+                # Look for Bing answer boxes
+                answer_box = soup.find('div', {'class': 'b_ans'})
+                if answer_box:
+                    text = answer_box.get_text().strip()
+                    if text and len(text) > 20:
+                        results.append(text)
+                
+                # Look for search snippets
+                for div in soup.find_all('div', {'class': 'b_caption'}):
+                    text = div.get_text().strip()
+                    if text and len(text) > 20 and len(text) < 400:
+                        results.append(text)
+                    if len(results) >= 3:
+                        break
+                
+                return results if results else None
+                
+        except Exception as e:
+            print(f"{Fore.RED}Bing search error: {str(e)}{Style.RESET_ALL}")
             return None
     
     def search_web(self, query):
@@ -209,36 +306,30 @@ class InternetSearch:
         if not self.has_internet:
             return None
             
-        print(f"{Fore.YELLOW}*burp* Searching for: {query}...{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}*burp* Searching the interdimensional web for: {query}...{Style.RESET_ALL}")
         
-        # Try DuckDuckGo first (most reliable)
-        try:
-            results = self.search_duckduckgo(query)
-            if results and len(results) > 0:
-                print(f"{Fore.GREEN}*burp* Found some interdimensional knowledge from DuckDuckGo!{Style.RESET_ALL}")
-                return results
-        except Exception as e:
-            print(f"{Fore.RED}*burp* DuckDuckGo search failed: {str(e)}{Style.RESET_ALL}")
+        # Try multiple search engines
+        search_methods = [
+            ("DuckDuckGo", self.search_duckduckgo),
+            ("Wikipedia", self.search_wikipedia_api),
+            ("Bing", self.search_bing_api),
+            ("Google", self.search_google_simple)
+        ]
         
-        # Try Wikipedia
-        try:
-            results = self.search_wikipedia_api(query)
-            if results and len(results) > 0:
-                print(f"{Fore.GREEN}*burp* Found Wikipedia knowledge!{Style.RESET_ALL}")
-                return results
-        except Exception as e:
-            print(f"{Fore.RED}*burp* Wikipedia search failed: {str(e)}{Style.RESET_ALL}")
+        for engine_name, search_func in search_methods:
+            try:
+                results = search_func(query)
+                if results and len(results) > 0:
+                    print(f"{Fore.GREEN}*burp* Found interdimensional knowledge from {engine_name}!{Style.RESET_ALL}")
+                    return results
+                else:
+                    print(f"{Fore.YELLOW}*burp* {engine_name} didn't have what we need...{Style.RESET_ALL}")
+            except Exception as e:
+                print(f"{Fore.RED}*burp* {engine_name} search failed: {str(e)}{Style.RESET_ALL}")
+                continue
         
-        # Try Google as fallback
-        try:
-            results = self.search_google_simple(query)
-            if results and len(results) > 0:
-                print(f"{Fore.GREEN}*burp* Found Google results!{Style.RESET_ALL}")
-                return results
-        except Exception as e:
-            print(f"{Fore.RED}*burp* Google search failed: {str(e)}{Style.RESET_ALL}")
-        
-        return [f"*burp* Sorry, all search methods failed for '{query}'. The internet is being difficult today."]
+        print(f"{Fore.RED}*burp* All search engines failed! The internet is being difficult today.{Style.RESET_ALL}")
+        return None
 
 class OllamaClient:
     def __init__(self, base_url="http://localhost:11434"):
@@ -355,7 +446,7 @@ def needs_search(message):
         'news', 'weather', 'price', 'stock', 'what happened', 'who is', 'when did',
         'how much', 'where is', 'what is the latest', 'update', 'now', '2024', '2025',
         'breaking', 'just announced', 'new release', 'recently', 'prime minister',
-        'president', 'leader', 'government', 'elected', 'politics'
+        'president', 'leader', 'government', 'elected', 'politics', 'minister'
     ]
     
     message_lower = message.lower()
@@ -441,7 +532,7 @@ def traditional_chat(tokenizer, model, message, conversation_history=None, searc
         return f"*burp* Traditional model error: {str(e)}"
 
 def main():
-    print(f"{Fore.CYAN}🧪 Rick Sanchez Chatbot - Enhanced Edition with Internet Search{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}🧪 Rick Sanchez Chatbot - Enhanced Edition with Internet Search (FIXED){Style.RESET_ALL}")
     print(f"{Fore.YELLOW}*burp* Loading advanced AI systems...{Style.RESET_ALL}")
     
     # Initialize search capability
@@ -526,7 +617,6 @@ def main():
             if user_input.lower().startswith('search '):
                 search_query = user_input[7:].strip()
                 if internet_available:
-                    print(f"{Fore.YELLOW}*burp* Searching the interdimensional internet...{Style.RESET_ALL}")
                     search_results = search_engine.search_web(search_query)
                     user_input = f"Tell me about: {search_query}"
                 else:
@@ -535,16 +625,13 @@ def main():
             
             # Check if we should search automatically
             elif internet_available and needs_search(user_input):
-                print(f"{Fore.YELLOW}*burp* This might need fresh info, let me check...{Style.RESET_ALL}")
                 search_results = search_engine.search_web(user_input)
                 
-                # Debug: show what we found
+                # Show what we found (if anything)
                 if search_results:
-                    print(f"{Fore.CYAN}Debug - Search results found: {len(search_results)} items{Style.RESET_ALL}")
-                    for i, result in enumerate(search_results[:2]):  # Show first 2
-                        print(f"{Fore.CYAN}Result {i+1}: {result[:100]}...{Style.RESET_ALL}")
+                    print(f"{Fore.CYAN}*burp* Found {len(search_results)} relevant results!{Style.RESET_ALL}")
                 else:
-                    print(f"{Fore.RED}Debug - No search results returned{Style.RESET_ALL}")
+                    print(f"{Fore.YELLOW}*burp* Couldn't find current info, I'll work with what I know...{Style.RESET_ALL}")
                 
             # Show thinking indicator
             print(f"{Fore.YELLOW}Rick: *burp* Let me think...{Style.RESET_ALL}", end="", flush=True)
