@@ -85,11 +85,11 @@ class OllamaClient:
         
         # Updated priority order with your preferred sequence
         preferred_models = [
-            "phi3:mini",         # Microsoft Phi-3 (your #1 choice)
-            "qwen2:1.5b",        # Qwen 1.5B (your #2 choice)  
-            "llama3.2:1b",       # Llama 3.2 1B (your #3 choice)
-            "gemma:2b",          # Google Gemma 2B (your #4 choice)
-            "qwen2.5:3b-instruct",
+            "qwen2.5:3b-instruct", # qwen2.5:3b-instruct (your #1 choice)
+            "phi3:mini",         # Microsoft Phi-3 (your #2 choice)
+            "qwen2:1.5b",        # Qwen 1.5B (your #3 choice)  
+            "llama3.2:1b",       # Llama 3.2 1B (your #4 choice)
+            "gemma:2b",          # Google Gemma 2B (your #5 choice)
             "llama3.2:3b-instruct",
             "gemma2:2b-instruct",
             "tinyllama",
