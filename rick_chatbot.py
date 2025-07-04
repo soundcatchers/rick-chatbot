@@ -13,6 +13,7 @@ import time
 import urllib.parse
 from colorama import init, Fore, Style
 import re
+from bs4 import BeautifulSoup
 
 # Initialize colorama for colored output
 init(autoreset=True)
@@ -64,7 +65,7 @@ class InternetSearch:
         self.search_engines = [
             'google.com',
             'bing.com', 
-            'search.yahoo.com'
+            'duckduckgo.com'
         ]
         
     def check_internet_connection(self):
@@ -90,75 +91,10 @@ class InternetSearch:
         self.has_internet = False
         return False
     
-    def search_google_scrape(self, query, max_results=3):
-        """Search Google using web scraping (improved method)"""
+    def search_duckduckgo(self, query, max_results=3):
+        """Search DuckDuckGo using their instant answer API"""
         try:
-            # Encode the query for URL
-            encoded_query = urllib.parse.quote_plus(query)
-            url = f"https://www.google.com/search?q={encoded_query}&num=10&hl=en"
-            
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'Accept-Encoding': 'gzip, deflate',
-                'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1'
-            }
-            
-            response = requests.get(url, headers=headers, timeout=15)
-            
-            if response.status_code == 200:
-                content = response.text
-                snippets = []
-                
-                # Multiple patterns to catch different Google layouts
-                patterns = [
-                    r'<div class="BNeawe[^>]*>([^<]+)</div>',
-                    r'<span class="aCOpRe">([^<]+)</span>',
-                    r'<div class="VwiC3b[^>]*>([^<]+)</div>',
-                    r'<span class="st">([^<]+)</span>',
-                    r'<div class="s">([^<]+)</div>',
-                    r'<div data-content-feature="1"[^>]*>([^<]+)</div>',
-                    r'<div class="IsZvec">([^<]+)</div>',
-                    r'<div class="hgKElc">([^<]+)</div>'
-                ]
-                
-                for pattern in patterns:
-                    matches = re.findall(pattern, content, re.IGNORECASE | re.DOTALL)
-                    for match in matches:
-                        clean_text = re.sub(r'<[^>]+>', '', match).strip()
-                        clean_text = re.sub(r'\s+', ' ', clean_text)
-                        if clean_text and len(clean_text) > 30 and len(clean_text) < 200:
-                            snippets.append(clean_text)
-                    
-                    if len(snippets) >= max_results:
-                        break
-                
-                # If no snippets found, try to get any meaningful text
-                if not snippets:
-                    # Look for any text that might be a result
-                    all_text = re.findall(r'>([^<]{30,150})<', content)
-                    for text in all_text:
-                        clean_text = text.strip()
-                        if (clean_text and 
-                            not clean_text.startswith('http') and 
-                            not clean_text.startswith('www') and
-                            'google' not in clean_text.lower() and
-                            len(clean_text) > 30):
-                            snippets.append(clean_text)
-                            if len(snippets) >= max_results:
-                                break
-                
-                return snippets[:max_results] if snippets else [f"Found search results for '{query}' but couldn't extract clear text"]
-                
-        except Exception as e:
-            return [f"Google search error: {str(e)}"]
-    
-    def search_simple_api(self, query):
-        """Simple search using a free API service"""
-        try:
-            # Use a free search API (like SerpApi alternative)
+            # Use DuckDuckGo instant answer API
             url = f"https://api.duckduckgo.com/?q={urllib.parse.quote_plus(query)}&format=json&no_html=1&skip_disambig=1"
             
             response = requests.get(url, timeout=10)
@@ -171,64 +107,102 @@ class InternetSearch:
                 if data.get('Abstract'):
                     results.append(data['Abstract'])
                 
-                # Get related topics
-                if data.get('RelatedTopics'):
-                    for topic in data['RelatedTopics'][:2]:
-                        if isinstance(topic, dict) and 'Text' in topic:
-                            results.append(topic['Text'])
-                
                 # Get answer if available
                 if data.get('Answer'):
                     results.insert(0, data['Answer'])
                 
-                return results if results else ["No results from backup search"]
+                # Get definition if available
+                if data.get('Definition'):
+                    results.append(data['Definition'])
+                
+                # Get related topics
+                if data.get('RelatedTopics'):
+                    for topic in data['RelatedTopics'][:2]:
+                        if isinstance(topic, dict) and 'Text' in topic:
+                            text = topic['Text']
+                            if text and len(text) > 20:
+                                results.append(text)
+                
+                # Get infobox if available
+                if data.get('Infobox') and 'content' in data['Infobox']:
+                    for item in data['Infobox']['content'][:2]:
+                        if isinstance(item, dict) and 'value' in item:
+                            value = item['value']
+                            if isinstance(value, str) and len(value) > 20:
+                                results.append(value)
+                
+                return results[:max_results] if results else None
                 
         except Exception as e:
-            return [f"Backup search error: {str(e)}"]
+            print(f"{Fore.RED}DuckDuckGo search error: {str(e)}{Style.RESET_ALL}")
+            return None
     
-    def search_bing_scrape(self, query, max_results=3):
-        """Search Bing using web scraping (improved method)"""
+    def search_wikipedia_api(self, query):
+        """Search Wikipedia using their API"""
         try:
+            # Search for pages
+            search_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote_plus(query)}"
+            
+            response = requests.get(search_url, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                
+                results = []
+                
+                # Get extract
+                if data.get('extract'):
+                    results.append(data['extract'])
+                
+                return results if results else None
+                
+        except Exception as e:
+            print(f"{Fore.RED}Wikipedia search error: {str(e)}{Style.RESET_ALL}")
+            return None
+    
+    def search_google_simple(self, query):
+        """Simple Google search using requests-html alternative"""
+        try:
+            # Use a simple approach to get Google results
             encoded_query = urllib.parse.quote_plus(query)
-            url = f"https://www.bing.com/search?q={encoded_query}&count=10"
+            url = f"https://www.google.com/search?q={encoded_query}&num=5"
             
             headers = {
-                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'Accept-Encoding': 'gzip, deflate',
-                'Connection': 'keep-alive'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             }
             
             response = requests.get(url, headers=headers, timeout=15)
             
             if response.status_code == 200:
-                content = response.text
-                snippets = []
-                
-                # Multiple patterns for Bing
-                patterns = [
-                    r'<p class="b_paractl">([^<]+)</p>',
-                    r'<div class="b_caption">.*?<p>([^<]+)</p>',
-                    r'<div class="b_snippetBigText">([^<]+)</div>',
-                    r'<span class="b_snippetText">([^<]+)</span>'
-                ]
-                
-                for pattern in patterns:
-                    matches = re.findall(pattern, content, re.IGNORECASE | re.DOTALL)
-                    for match in matches:
-                        clean_text = re.sub(r'<[^>]+>', '', match).strip()
-                        clean_text = re.sub(r'\s+', ' ', clean_text)
-                        if clean_text and len(clean_text) > 30 and len(clean_text) < 200:
-                            snippets.append(clean_text)
+                # Try to parse with BeautifulSoup if available
+                try:
+                    soup = BeautifulSoup(response.text, 'html.parser')
                     
-                    if len(snippets) >= max_results:
-                        break
-                
-                return snippets[:max_results] if snippets else [f"Found Bing results for '{query}' but couldn't extract clear text"]
-                
+                    # Look for featured snippets
+                    featured_snippet = soup.find('div', {'class': 'BNeawe'})
+                    if featured_snippet:
+                        text = featured_snippet.get_text().strip()
+                        if text and len(text) > 20:
+                            return [text]
+                    
+                    # Look for search result snippets
+                    results = []
+                    for div in soup.find_all('div', {'class': 'BNeawe'}):
+                        text = div.get_text().strip()
+                        if text and len(text) > 20 and len(text) < 300:
+                            results.append(text)
+                        if len(results) >= 3:
+                            break
+                    
+                    return results if results else None
+                    
+                except ImportError:
+                    # Fallback without BeautifulSoup
+                    print(f"{Fore.YELLOW}Install beautifulsoup4 for better search results: pip install beautifulsoup4{Style.RESET_ALL}")
+                    return None
+                    
         except Exception as e:
-            return [f"Bing search error: {str(e)}"]
+            print(f"{Fore.RED}Google search error: {str(e)}{Style.RESET_ALL}")
+            return None
     
     def search_web(self, query):
         """Search the web using available methods"""
@@ -237,30 +211,33 @@ class InternetSearch:
             
         print(f"{Fore.YELLOW}*burp* Searching for: {query}...{Style.RESET_ALL}")
         
-        # Try Google first
+        # Try DuckDuckGo first (most reliable)
         try:
-            results = self.search_google_scrape(query)
-            if results and len(results) > 0 and "error" not in results[0].lower():
-                print(f"{Fore.GREEN}*burp* Found some interdimensional knowledge!{Style.RESET_ALL}")
+            results = self.search_duckduckgo(query)
+            if results and len(results) > 0:
+                print(f"{Fore.GREEN}*burp* Found some interdimensional knowledge from DuckDuckGo!{Style.RESET_ALL}")
+                return results
+        except Exception as e:
+            print(f"{Fore.RED}*burp* DuckDuckGo search failed: {str(e)}{Style.RESET_ALL}")
+        
+        # Try Wikipedia
+        try:
+            results = self.search_wikipedia_api(query)
+            if results and len(results) > 0:
+                print(f"{Fore.GREEN}*burp* Found Wikipedia knowledge!{Style.RESET_ALL}")
+                return results
+        except Exception as e:
+            print(f"{Fore.RED}*burp* Wikipedia search failed: {str(e)}{Style.RESET_ALL}")
+        
+        # Try Google as fallback
+        try:
+            results = self.search_google_simple(query)
+            if results and len(results) > 0:
+                print(f"{Fore.GREEN}*burp* Found Google results!{Style.RESET_ALL}")
                 return results
         except Exception as e:
             print(f"{Fore.RED}*burp* Google search failed: {str(e)}{Style.RESET_ALL}")
-            
-        # Fallback to Bing
-        try:
-            results = self.search_bing_scrape(query)
-            if results and len(results) > 0 and "error" not in results[0].lower():
-                print(f"{Fore.GREEN}*burp* Found backup results from Bing!{Style.RESET_ALL}")
-                return results
-        except Exception as e:
-            print(f"{Fore.RED}*burp* Bing search also failed: {str(e)}{Style.RESET_ALL}")
-            
-        # Try a simple API-based search as last resort
-        try:
-            return self.search_simple_api(query)
-        except:
-            pass
-            
+        
         return [f"*burp* Sorry, all search methods failed for '{query}'. The internet is being difficult today."]
 
 class OllamaClient:
@@ -377,7 +354,8 @@ def needs_search(message):
         'current', 'latest', 'recent', 'today', 'yesterday', 'this week', 'this month',
         'news', 'weather', 'price', 'stock', 'what happened', 'who is', 'when did',
         'how much', 'where is', 'what is the latest', 'update', 'now', '2024', '2025',
-        'breaking', 'just announced', 'new release', 'recently'
+        'breaking', 'just announced', 'new release', 'recently', 'prime minister',
+        'president', 'leader', 'government', 'elected', 'politics'
     ]
     
     message_lower = message.lower()
