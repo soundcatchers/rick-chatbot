@@ -56,7 +56,8 @@ sudo apt install -y \
     libharfbuzz-dev \
     libfribidi-dev \
     libxcb1-dev \
-    libsqlite3-dev
+    libsqlite3-dev \
+    beautifulsoup4
 
 # Create project directory
 PROJECT_DIR="$HOME/rick_chatbot"
