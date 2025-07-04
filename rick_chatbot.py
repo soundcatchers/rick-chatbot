@@ -70,98 +70,162 @@ class InternetSearch:
     def check_internet_connection(self):
         """Check if internet is available"""
         try:
-            # Try to reach Google's DNS
-            response = requests.get('https://8.8.8.8', timeout=5)
-            self.has_internet = True
-            return True
-        except:
-            try:
-                # Fallback test with a simple HTTP request
-                response = requests.get('https://httpbin.org/ip', timeout=5)
+            # Try a simple HTTP request to a reliable endpoint
+            response = requests.get('https://httpbin.org/ip', timeout=5)
+            if response.status_code == 200:
                 self.has_internet = True
                 return True
-            except:
-                self.has_internet = False
-                return False
+        except:
+            pass
+            
+        try:
+            # Fallback test with Google
+            response = requests.get('https://www.google.com', timeout=5)
+            if response.status_code == 200:
+                self.has_internet = True
+                return True
+        except:
+            pass
+            
+        self.has_internet = False
+        return False
     
     def search_google_scrape(self, query, max_results=3):
-        """Search Google using web scraping (free method)"""
+        """Search Google using web scraping (improved method)"""
         try:
             # Encode the query for URL
             encoded_query = urllib.parse.quote_plus(query)
-            url = f"https://www.google.com/search?q={encoded_query}&num={max_results}"
+            url = f"https://www.google.com/search?q={encoded_query}&num=10&hl=en"
             
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1'
             }
             
-            response = requests.get(url, headers=headers, timeout=10)
+            response = requests.get(url, headers=headers, timeout=15)
             
             if response.status_code == 200:
-                # Simple extraction of text content
                 content = response.text
-                
-                # Extract search result snippets (basic regex approach)
                 snippets = []
                 
-                # Look for search result divs and extract text
-                # This is a simplified approach - in production you'd use BeautifulSoup
-                import re
+                # Multiple patterns to catch different Google layouts
+                patterns = [
+                    r'<div class="BNeawe[^>]*>([^<]+)</div>',
+                    r'<span class="aCOpRe">([^<]+)</span>',
+                    r'<div class="VwiC3b[^>]*>([^<]+)</div>',
+                    r'<span class="st">([^<]+)</span>',
+                    r'<div class="s">([^<]+)</div>',
+                    r'<div data-content-feature="1"[^>]*>([^<]+)</div>',
+                    r'<div class="IsZvec">([^<]+)</div>',
+                    r'<div class="hgKElc">([^<]+)</div>'
+                ]
                 
-                # Pattern to find search result content
-                pattern = r'<div class="BNeawe[^>]*>([^<]+)</div>'
-                matches = re.findall(pattern, content)
+                for pattern in patterns:
+                    matches = re.findall(pattern, content, re.IGNORECASE | re.DOTALL)
+                    for match in matches:
+                        clean_text = re.sub(r'<[^>]+>', '', match).strip()
+                        clean_text = re.sub(r'\s+', ' ', clean_text)
+                        if clean_text and len(clean_text) > 30 and len(clean_text) < 200:
+                            snippets.append(clean_text)
+                    
+                    if len(snippets) >= max_results:
+                        break
                 
-                # Also try alternative patterns
-                if not matches:
-                    pattern = r'<span class="aCOpRe">([^<]+)</span>'
-                    matches = re.findall(pattern, content)
+                # If no snippets found, try to get any meaningful text
+                if not snippets:
+                    # Look for any text that might be a result
+                    all_text = re.findall(r'>([^<]{30,150})<', content)
+                    for text in all_text:
+                        clean_text = text.strip()
+                        if (clean_text and 
+                            not clean_text.startswith('http') and 
+                            not clean_text.startswith('www') and
+                            'google' not in clean_text.lower() and
+                            len(clean_text) > 30):
+                            snippets.append(clean_text)
+                            if len(snippets) >= max_results:
+                                break
                 
-                if not matches:
-                    pattern = r'<div class="VwiC3b[^>]*>([^<]+)</div>'
-                    matches = re.findall(pattern, content)
-                
-                # Clean up and return results
-                for match in matches[:max_results]:
-                    clean_text = re.sub(r'<[^>]+>', '', match).strip()
-                    if clean_text and len(clean_text) > 20:
-                        snippets.append(clean_text)
-                
-                return snippets[:max_results] if snippets else ["No clear results found"]
+                return snippets[:max_results] if snippets else [f"Found search results for '{query}' but couldn't extract clear text"]
                 
         except Exception as e:
-            return [f"Search error: {str(e)}"]
+            return [f"Google search error: {str(e)}"]
+    
+    def search_simple_api(self, query):
+        """Simple search using a free API service"""
+        try:
+            # Use a free search API (like SerpApi alternative)
+            url = f"https://api.duckduckgo.com/?q={urllib.parse.quote_plus(query)}&format=json&no_html=1&skip_disambig=1"
+            
+            response = requests.get(url, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                
+                results = []
+                
+                # Get abstract if available
+                if data.get('Abstract'):
+                    results.append(data['Abstract'])
+                
+                # Get related topics
+                if data.get('RelatedTopics'):
+                    for topic in data['RelatedTopics'][:2]:
+                        if isinstance(topic, dict) and 'Text' in topic:
+                            results.append(topic['Text'])
+                
+                # Get answer if available
+                if data.get('Answer'):
+                    results.insert(0, data['Answer'])
+                
+                return results if results else ["No results from backup search"]
+                
+        except Exception as e:
+            return [f"Backup search error: {str(e)}"]
     
     def search_bing_scrape(self, query, max_results=3):
-        """Search Bing using web scraping (fallback method)"""
+        """Search Bing using web scraping (improved method)"""
         try:
             encoded_query = urllib.parse.quote_plus(query)
-            url = f"https://www.bing.com/search?q={encoded_query}&count={max_results}"
+            url = f"https://www.bing.com/search?q={encoded_query}&count=10"
             
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate',
+                'Connection': 'keep-alive'
             }
             
-            response = requests.get(url, headers=headers, timeout=10)
+            response = requests.get(url, headers=headers, timeout=15)
             
             if response.status_code == 200:
                 content = response.text
                 snippets = []
                 
-                # Pattern for Bing search results
-                pattern = r'<p class="b_paractl">([^<]+)</p>'
-                matches = re.findall(pattern, content)
+                # Multiple patterns for Bing
+                patterns = [
+                    r'<p class="b_paractl">([^<]+)</p>',
+                    r'<div class="b_caption">.*?<p>([^<]+)</p>',
+                    r'<div class="b_snippetBigText">([^<]+)</div>',
+                    r'<span class="b_snippetText">([^<]+)</span>'
+                ]
                 
-                if not matches:
-                    pattern = r'<div class="b_caption">.*?<p>([^<]+)</p>'
-                    matches = re.findall(pattern, content, re.DOTALL)
+                for pattern in patterns:
+                    matches = re.findall(pattern, content, re.IGNORECASE | re.DOTALL)
+                    for match in matches:
+                        clean_text = re.sub(r'<[^>]+>', '', match).strip()
+                        clean_text = re.sub(r'\s+', ' ', clean_text)
+                        if clean_text and len(clean_text) > 30 and len(clean_text) < 200:
+                            snippets.append(clean_text)
+                    
+                    if len(snippets) >= max_results:
+                        break
                 
-                for match in matches[:max_results]:
-                    clean_text = re.sub(r'<[^>]+>', '', match).strip()
-                    if clean_text and len(clean_text) > 20:
-                        snippets.append(clean_text)
-                
-                return snippets[:max_results] if snippets else ["No clear results found"]
+                return snippets[:max_results] if snippets else [f"Found Bing results for '{query}' but couldn't extract clear text"]
                 
         except Exception as e:
             return [f"Bing search error: {str(e)}"]
@@ -171,17 +235,33 @@ class InternetSearch:
         if not self.has_internet:
             return None
             
+        print(f"{Fore.YELLOW}*burp* Searching for: {query}...{Style.RESET_ALL}")
+        
         # Try Google first
-        results = self.search_google_scrape(query)
-        if results and results[0] != "No clear results found":
-            return results
+        try:
+            results = self.search_google_scrape(query)
+            if results and len(results) > 0 and "error" not in results[0].lower():
+                print(f"{Fore.GREEN}*burp* Found some interdimensional knowledge!{Style.RESET_ALL}")
+                return results
+        except Exception as e:
+            print(f"{Fore.RED}*burp* Google search failed: {str(e)}{Style.RESET_ALL}")
             
         # Fallback to Bing
-        results = self.search_bing_scrape(query)
-        if results and results[0] != "No clear results found":
-            return results
+        try:
+            results = self.search_bing_scrape(query)
+            if results and len(results) > 0 and "error" not in results[0].lower():
+                print(f"{Fore.GREEN}*burp* Found backup results from Bing!{Style.RESET_ALL}")
+                return results
+        except Exception as e:
+            print(f"{Fore.RED}*burp* Bing search also failed: {str(e)}{Style.RESET_ALL}")
             
-        return ["No useful search results found"]
+        # Try a simple API-based search as last resort
+        try:
+            return self.search_simple_api(query)
+        except:
+            pass
+            
+        return [f"*burp* Sorry, all search methods failed for '{query}'. The internet is being difficult today."]
 
 class OllamaClient:
     def __init__(self, base_url="http://localhost:11434"):
@@ -215,10 +295,10 @@ class OllamaClient:
         
         # Updated priority order with your preferred sequence
         preferred_models = [
-            "qwen2.5:3b-instruct",  # Qwen2.5:3b-instruct (your #1 choice)
+            "qwen2.5:3b-instruct", # Qwen2.5:3b-instruct (your #1 choice)
             "phi3:mini",         # Microsoft Phi-3 (your #2 choice)
             "qwen2:1.5b",        # Qwen 1.5B (your #3 choice)  
-            "llama3.2:1b",       # Llama 3.2 1B (your #4 choice)
+            "llama3.2:1b",       # Llama 3.2 1B (your #4  choice)
             "gemma:2b",          # Google Gemma 2B (your #5 choice)
             "llama3.2:3b-instruct",
             "gemma2:2b-instruct",
@@ -479,6 +559,14 @@ def main():
             elif internet_available and needs_search(user_input):
                 print(f"{Fore.YELLOW}*burp* This might need fresh info, let me check...{Style.RESET_ALL}")
                 search_results = search_engine.search_web(user_input)
+                
+                # Debug: show what we found
+                if search_results:
+                    print(f"{Fore.CYAN}Debug - Search results found: {len(search_results)} items{Style.RESET_ALL}")
+                    for i, result in enumerate(search_results[:2]):  # Show first 2
+                        print(f"{Fore.CYAN}Result {i+1}: {result[:100]}...{Style.RESET_ALL}")
+                else:
+                    print(f"{Fore.RED}Debug - No search results returned{Style.RESET_ALL}")
                 
             # Show thinking indicator
             print(f"{Fore.YELLOW}Rick: *burp* Let me think...{Style.RESET_ALL}", end="", flush=True)
