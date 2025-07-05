@@ -600,7 +600,8 @@ def main():
         if not traditional_model:
             print(f"{Fore.RED}❌ No AI backends available!{Style.RESET_ALL}")
             print(f"{Fore.YELLOW}Solutions:{Style.RESET_ALL}")
-            print("1. Install Ollama models: ollama pull phi3:mini")
+            print("1. Install Ollama models: ollama pull qwen2.5:3b-instruct")
+            #print("1. Install Ollama models: ollama pull phi3:mini")
             print("2. Check if Ollama is running: ollama serve")
             print("3. Install transformers: pip install transformers torch")
             return 1
