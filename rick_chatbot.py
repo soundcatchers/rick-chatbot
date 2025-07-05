@@ -310,10 +310,10 @@ class InternetSearch:
         
         # Try multiple search engines
         search_methods = [
-            ("DuckDuckGo", self.search_duckduckgo),
-            ("Wikipedia", self.search_wikipedia_api),
+            ("Google", self.search_google_simple),
             ("Bing", self.search_bing_api),
-            ("Google", self.search_google_simple)
+            ("Wikipedia", self.search_wikipedia_api),
+            ("DuckDuckGo", self.search_duckduckgo)            
         ]
         
         for engine_name, search_func in search_methods:
@@ -368,15 +368,15 @@ class OllamaClient:
         # Updated priority order with your preferred sequence
         preferred_models = [
             "qwen2.5:3b-instruct", # Qwen2.5:3b-instruct (your #1 choice)
-            "phi3:mini",         # Microsoft Phi-3 (your #2 choice)
-            "qwen2:1.5b",        # Qwen 1.5B (your #3 choice)  
-            "llama3.2:1b",       # Llama 3.2 1B (your #4  choice)
-            "gemma:2b",          # Google Gemma 2B (your #5 choice)
-            "llama3.2:3b-instruct",
-            "gemma2:2b-instruct",
-            "tinyllama",
-            "phi3:3.8b",
-            "gemma:7b"
+            #"phi3:mini",         # Microsoft Phi-3 (your #2 choice)
+            #"qwen2:1.5b",        # Qwen 1.5B (your #3 choice)  
+            #"llama3.2:1b",       # Llama 3.2 1B (your #4  choice)
+           # "gemma:2b",          # Google Gemma 2B (your #5 choice)
+           # "llama3.2:3b-instruct",
+           # "gemma2:2b-instruct",
+           # "tinyllama",
+           # "phi3:3.8b",
+           # "gemma:7b"
         ]
         
         for preferred in preferred_models:
