@@ -321,6 +321,10 @@ class InternetSearch:
                 results = search_func(query)
                 if results and len(results) > 0:
                     print(f"{Fore.GREEN}*burp* Found interdimensional knowledge from {engine_name}!{Style.RESET_ALL}")
+                    # DEBUG: Print what we found
+                    print(f"{Fore.CYAN}Debug - Search results:{Style.RESET_ALL}")
+                    for i, result in enumerate(results):
+                        print(f"{Fore.CYAN}  {i+1}. {result[:100]}...{Style.RESET_ALL}")
                     return results
                 else:
                     print(f"{Fore.YELLOW}*burp* {engine_name} didn't have what we need...{Style.RESET_ALL}")
@@ -392,30 +396,48 @@ class OllamaClient:
     def chat(self, message, conversation_history=None, search_results=None):
         """Send chat message to Ollama"""
         try:
-            payload = {
-                "model": self.current_model,
-                "messages": [
-                    {"role": "system", "content": RICK_SYSTEM_PROMPT},
-                ]
-            }
+            # Build messages array
+            messages = [
+                {"role": "system", "content": RICK_SYSTEM_PROMPT},
+            ]
             
             # Add conversation history
             if conversation_history:
-                payload["messages"].extend(conversation_history)
+                messages.extend(conversation_history)
             
             # Prepare the user message, including search results if available
             user_message = message
             if search_results:
-                search_context = "\n\nSearch Results:\n" + "\n".join([f"- {result}" for result in search_results])
-                user_message = f"{message}{search_context}"
+                search_context = "\n\nHere's what I found on the internet:\n"
+                for i, result in enumerate(search_results, 1):
+                    search_context += f"{i}. {result}\n"
+                user_message = f"{message}\n{search_context}"
                 
-            payload["messages"].append({"role": "user", "content": user_message})
+            messages.append({"role": "user", "content": user_message})
+            
+            # DEBUG: Print the payload being sent
+            print(f"{Fore.CYAN}Debug - Sending to Ollama:{Style.RESET_ALL}")
+            print(f"{Fore.CYAN}Model: {self.current_model}{Style.RESET_ALL}")
+            print(f"{Fore.CYAN}Messages count: {len(messages)}{Style.RESET_ALL}")
+            if search_results:
+                print(f"{Fore.CYAN}Search results included: {len(search_results)}{Style.RESET_ALL}")
+            
+            payload = {
+                "model": self.current_model,
+                "messages": messages,
+                "stream": True,
+                "options": {
+                    "temperature": 0.8,
+                    "top_p": 0.9,
+                    "num_ctx": 4096
+                }
+            }
             
             response = requests.post(
                 f"{self.base_url}/api/chat",
                 json=payload,
                 stream=True,
-                timeout=30
+                timeout=60  # Increased timeout
             )
             
             if response.status_code == 200:
@@ -434,9 +456,14 @@ class OllamaClient:
                             continue
                 return full_response.strip()
             else:
-                return f"*burp* Error: {response.status_code}"
+                error_msg = f"HTTP {response.status_code}: {response.text}"
+                print(f"{Fore.RED}Ollama error: {error_msg}{Style.RESET_ALL}")
+                return f"*burp* Ollama error: {error_msg}"
                 
+        except requests.exceptions.Timeout:
+            return "*burp* Timeout waiting for Ollama response. The model might be thinking too hard!"
         except Exception as e:
+            print(f"{Fore.RED}Chat error: {str(e)}{Style.RESET_ALL}")
             return f"*burp* Something went wrong: {str(e)}"
 
 def needs_search(message):
@@ -583,12 +610,14 @@ def main():
     print(f"{Fore.CYAN}Type 'quit', 'exit', or 'bye' to exit{Style.RESET_ALL}")
     print(f"{Fore.CYAN}Type 'models' to see available models{Style.RESET_ALL}")
     print(f"{Fore.CYAN}Type 'search <query>' to force a web search{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}Type 'debug' to toggle debug mode{Style.RESET_ALL}")
     if internet_available:
         print(f"{Fore.GREEN}🔍 Internet search is active - I'll search when needed!{Style.RESET_ALL}\n")
     else:
         print(f"{Fore.YELLOW}⚠️  No internet - I'll be honest when I don't know things{Style.RESET_ALL}\n")
     
     conversation_history = []
+    debug_mode = False
     
     while True:
         try:
@@ -600,6 +629,11 @@ def main():
             if user_input.lower() in ['quit', 'exit', 'bye', 'q']:
                 print(f"\n{Fore.GREEN}Rick: {random.choice(RICK_EXITS)}{Style.RESET_ALL}")
                 break
+                
+            if user_input.lower() == 'debug':
+                debug_mode = not debug_mode
+                print(f"{Fore.CYAN}Debug mode: {'ON' if debug_mode else 'OFF'}{Style.RESET_ALL}")
+                continue
                 
             if user_input.lower() == 'models':
                 if use_ollama:
