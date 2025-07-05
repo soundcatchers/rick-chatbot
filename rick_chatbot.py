@@ -193,10 +193,10 @@ class InternetSearch:
         try:
             # Use a simple approach to get Google results
             encoded_query = urllib.parse.quote_plus(query)
-            url = f"https://www.google.com/search?q={encoded_query}&num=5"
+            url = f"https://www.google.com/search?q={encoded_query}&num=10"
             
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
             
             response = requests.get(url, headers=headers, timeout=15)
@@ -208,72 +208,72 @@ class InternetSearch:
                     
                     results = []
                     
-                    # Look for featured snippets first (knowledge panel)
-                    for selector in [
+                    # Look for knowledge panel and featured snippets first (most reliable)
+                    knowledge_selectors = [
                         'div[data-attrid="wa:/description"]',
                         '.kno-rdesc span',
                         '.Z0LcW',
                         '.hgKElc',
-                        '.IZ6rdc'
-                    ]:
+                        '.IZ6rdc',
+                        '.LGOjhe',
+                        '.kno-ftr a'
+                    ]
+                    
+                    for selector in knowledge_selectors:
                         elements = soup.select(selector)
                         for elem in elements:
                             text = elem.get_text().strip()
                             if text and len(text) > 20 and len(text) < 800:
                                 results.append(text)
-                                break
-                        if results:
+                                if len(results) >= 2:
+                                    break
+                        if len(results) >= 2:
                             break
                     
                     # Look for answer boxes and rich snippets
-                    for div in soup.find_all('div', {'class': ['BNeawe', 'VwiC3b', 'aCOpRe', 's3v9rd']}):
-                        text = div.get_text().strip()
-                        if text and len(text) > 20 and len(text) < 500:
-                            # Avoid duplicates and irrelevant results
-                            if not any(existing in text or text in existing for existing in results):
-                                # Filter out obviously irrelevant results
-                                if not any(irrelevant in text.lower() for irrelevant in ['st helena', 'energy bill', 'sse thermal', 'equinor']):
+                    if len(results) < 3:
+                        for div in soup.find_all('div', {'class': ['BNeawe', 'VwiC3b', 'aCOpRe', 's3v9rd', 'kp-blk']}):
+                            text = div.get_text().strip()
+                            if text and len(text) > 20 and len(text) < 500:
+                                # Basic relevance check - avoid completely unrelated content
+                                if not any(existing in text or text in existing for existing in results):
                                     results.append(text)
-                        if len(results) >= 3:
-                            break
+                            if len(results) >= 3:
+                                break
                     
-                    # Look for search result descriptions
-                    for span in soup.find_all('span', {'class': ['st', 'aCOpRe']}):
-                        text = span.get_text().strip()
-                        if text and len(text) > 20:
-                            if not any(existing in text or text in existing for existing in results):
-                                # Filter out irrelevant results
-                                if not any(irrelevant in text.lower() for irrelevant in ['st helena', 'energy bill', 'sse thermal', 'equinor']):
+                    # Look for search result descriptions as fallback
+                    if len(results) < 3:
+                        for span in soup.find_all('span', {'class': ['st', 'aCOpRe']}):
+                            text = span.get_text().strip()
+                            if text and len(text) > 20:
+                                if not any(existing in text or text in existing for existing in results):
                                     results.append(text)
-                        if len(results) >= 3:
-                            break
+                            if len(results) >= 3:
+                                break
                     
                     return results if results else None
                 else:
                     # Very basic fallback without BeautifulSoup
-                    # Look for basic patterns in the HTML
                     import re
                     
                     # Look for basic content patterns
                     patterns = [
-                        r'<div[^>]*>([^<]{50,300})</div>',
-                        r'<span[^>]*>([^<]{50,300})</span>',
-                        r'<p[^>]*>([^<]{50,300})</p>'
+                        r'<div[^>]*>([^<]{50,400})</div>',
+                        r'<span[^>]*>([^<]{50,400})</span>',
+                        r'<p[^>]*>([^<]{50,400})</p>'
                     ]
                     
                     results = []
                     for pattern in patterns:
                         matches = re.findall(pattern, response.text)
-                        for match in matches[:3]:
+                        for match in matches[:5]:
                             clean_text = re.sub(r'<[^>]+>', '', match).strip()
                             if clean_text and len(clean_text) > 20:
-                                # Filter out irrelevant results
-                                if not any(irrelevant in clean_text.lower() for irrelevant in ['st helena', 'energy bill', 'sse thermal', 'equinor']):
-                                    results.append(clean_text)
+                                results.append(clean_text)
                         if results:
                             break
                     
-                    return results if results else None
+                    return results[:3] if results else None
                     
         except Exception as e:
             print(f"{Fore.RED}Google search error: {str(e)}{Style.RESET_ALL}")
@@ -286,7 +286,7 @@ class InternetSearch:
             url = f"https://www.bing.com/search?q={encoded_query}"
             
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
             
             response = requests.get(url, headers=headers, timeout=10)
@@ -296,33 +296,33 @@ class InternetSearch:
                 
                 results = []
                 
-                # Look for Bing answer boxes and featured snippets
-                for selector in [
+                # Look for Bing answer boxes and featured snippets (most reliable)
+                answer_selectors = [
                     '.b_ans',
-                    '.b_focusTextLarge',
+                    '.b_focusTextLarge', 
                     '.b_entityTitle',
                     '.b_factrow',
-                    '.ans_nws .na_cnt'
-                ]:
+                    '.ans_nws .na_cnt',
+                    '.b_algoup'
+                ]
+                
+                for selector in answer_selectors:
                     elements = soup.select(selector)
                     for elem in elements:
                         text = elem.get_text().strip()
                         if text and len(text) > 20 and len(text) < 600:
-                            # Filter out irrelevant results
-                            if not any(irrelevant in text.lower() for irrelevant in ['st helena', 'energy bill', 'sse thermal', 'equinor']):
-                                results.append(text)
-                        if len(results) >= 3:
+                            results.append(text)
+                        if len(results) >= 2:
                             break
-                    if results:
+                    if len(results) >= 2:
                         break
                 
                 # Look for search snippets if no answer boxes found
-                if not results:
+                if len(results) < 3:
                     for div in soup.find_all('div', {'class': 'b_caption'}):
                         text = div.get_text().strip()
                         if text and len(text) > 20 and len(text) < 400:
-                            # Filter out irrelevant results
-                            if not any(irrelevant in text.lower() for irrelevant in ['st helena', 'energy bill', 'sse thermal', 'equinor']):
+                            if not any(existing in text or text in existing for existing in results):
                                 results.append(text)
                         if len(results) >= 3:
                             break
@@ -331,67 +331,6 @@ class InternetSearch:
                 
         except Exception as e:
             print(f"{Fore.RED}Bing search error: {str(e)}{Style.RESET_ALL}")
-            return None
-    
-    def search_news_api(self, query):
-        """Search for current news and political information"""
-        try:
-            # Try BBC News search for UK political info
-            if 'uk' in query.lower() and any(word in query.lower() for word in ['prime minister', 'pm', 'government', 'minister']):
-                encoded_query = urllib.parse.quote_plus(f"UK Prime Minister 2025 current")
-                url = f"https://www.bbc.co.uk/search?q={encoded_query}"
-                
-                headers = {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                }
-                
-                response = requests.get(url, headers=headers, timeout=10)
-                
-                if response.status_code == 200 and HAS_BS4:
-                    soup = BeautifulSoup(response.text, 'html.parser')
-                    
-                    results = []
-                    
-                    # Look for BBC search results
-                    for div in soup.find_all('div', {'class': ['ssrcss-1f3bvyz-Stack', 'ssrcss-11r1m41-RichTextComponentWrapper']}):
-                        text = div.get_text().strip()
-                        if text and len(text) > 30 and len(text) < 400:
-                            if any(keyword in text.lower() for keyword in ['prime minister', 'keir starmer', 'downing street', 'labour', 'conservative']):
-                                results.append(text)
-                        if len(results) >= 2:
-                            break
-                    
-                    return results if results else None
-            
-            # Fallback to general news search
-            encoded_query = urllib.parse.quote_plus(query + " 2025 news")
-            url = f"https://www.google.com/search?q={encoded_query}&tbm=nws"
-            
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            }
-            
-            response = requests.get(url, headers=headers, timeout=10)
-            
-            if response.status_code == 200 and HAS_BS4:
-                soup = BeautifulSoup(response.text, 'html.parser')
-                
-                results = []
-                
-                # Look for news snippets
-                for div in soup.find_all('div', {'class': ['BNeawe', 'AP7Wnd']}):
-                    text = div.get_text().strip()
-                    if text and len(text) > 20 and len(text) < 300:
-                        # Filter out irrelevant results
-                        if not any(irrelevant in text.lower() for irrelevant in ['st helena', 'energy bill', 'sse thermal', 'equinor']):
-                            results.append(text)
-                    if len(results) >= 2:
-                        break
-                
-                return results if results else None
-                
-        except Exception as e:
-            print(f"{Fore.RED}News search error: {str(e)}{Style.RESET_ALL}")
             return None
     
     def search_web(self, query):
@@ -406,25 +345,29 @@ class InternetSearch:
             ("Google", self.search_google_simple),
             ("Bing", self.search_bing_api),
             ("Wikipedia", self.search_wikipedia_api),
-            ("DuckDuckGo", self.search_duckduckgo),
-            ("News Search", self.search_news_api)  # Added news-specific search
+            ("DuckDuckGo", self.search_duckduckgo)
         ]
         
         for engine_name, search_func in search_methods:
             try:
+                print(f"{Fore.YELLOW}*burp* Trying {engine_name}...{Style.RESET_ALL}")
                 results = search_func(query)
                 if results and len(results) > 0:
                     print(f"{Fore.GREEN}*burp* Found interdimensional knowledge from {engine_name}!{Style.RESET_ALL}")
-                    # DEBUG: Print what we found
-                    print(f"{Fore.CYAN}Debug - Search results:{Style.RESET_ALL}")
+                    # DEBUG: Always show what we found for troubleshooting
+                    print(f"{Fore.CYAN}Debug - Search results from {engine_name}:{Style.RESET_ALL}")
                     for i, result in enumerate(results):
-                        print(f"{Fore.CYAN}  {i+1}. {result[:100]}...{Style.RESET_ALL}")
+                        preview = result[:100] + "..." if len(result) > 100 else result
+                        print(f"{Fore.CYAN}  {i+1}. {preview}{Style.RESET_ALL}")
                     return results
                 else:
                     print(f"{Fore.YELLOW}*burp* {engine_name} didn't have what we need...{Style.RESET_ALL}")
             except Exception as e:
                 print(f"{Fore.RED}*burp* {engine_name} search failed: {str(e)}{Style.RESET_ALL}")
                 continue
+            
+            # Small delay between search engines to avoid rate limiting
+            time.sleep(1)
         
         print(f"{Fore.RED}*burp* All search engines failed! The internet is being difficult today.{Style.RESET_ALL}")
         return None
