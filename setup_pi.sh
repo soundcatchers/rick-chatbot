@@ -57,8 +57,9 @@ sudo apt install -y \
     libfribidi-dev \
     libxcb1-dev \
     libsqlite3-dev \
-    beautifulsoup4
-
+    beautifulsoup4 \
+    python-dotenv
+    
 # Create project directory
 PROJECT_DIR="$HOME/rick_chatbot"
 echo "📁 Creating project directory at $PROJECT_DIR"
