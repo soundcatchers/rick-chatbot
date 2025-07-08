@@ -11,14 +11,19 @@ import requests
 import random
 import time
 import urllib.parse
-from colorama import init, Fore, Style
+import subprocess
 import re
+from colorama import init, Fore, Style
+from dotenv import load_dotenv
 try:
     from bs4 import BeautifulSoup
     HAS_BS4 = True
 except ImportError:
     HAS_BS4 = False
     print(f"{Fore.YELLOW}Consider installing beautifulsoup4 for better search results: pip install beautifulsoup4{Style.RESET_ALL}")
+
+# Load environment variables
+load_dotenv()
 
 # Initialize colorama for colored output
 init(autoreset=True)
@@ -59,10 +64,9 @@ RICK_SYSTEM_PROMPT = """You are Rick Sanchez from Rick and Morty. You're a geniu
 - Can be condescending but occasionally shows wisdom
 - Uses crude humor but stays within reasonable bounds
 
-When you receive search results, incorporate them naturally into your response while maintaining Rick's personality.
-If you don't know something and no search results are provided, be honest about it in Rick's style.
+IMPORTANT: Keep responses under 250 words and always provide complete, useful answers. When you receive search results, incorporate them naturally into your response while maintaining Rick's personality. If you don't know something and no search results are provided, be honest about it in Rick's style.
 
-Respond as Rick would, including his speech patterns and personality, but keep responses helpful and engaging."""
+Always give the user what they actually asked for, don't ramble about unrelated topics."""
 
 class InternetSearch:
     def __init__(self):
@@ -72,6 +76,17 @@ class InternetSearch:
             'bing.com', 
             'duckduckgo.com'
         ]
+        
+        # Google Custom Search API configuration
+        self.google_api_key = os.getenv('GOOGLE_API_KEY')
+        self.google_cse_id = os.getenv('GOOGLE_CSE_ID')
+        self.has_google_api = bool(self.google_api_key and self.google_cse_id)
+        
+        if self.has_google_api:
+            print(f"{Fore.GREEN}🔑 Google Custom Search API configured!{Style.RESET_ALL}")
+        else:
+            print(f"{Fore.YELLOW}⚠️  No Google API key found - using fallback search methods{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}📋 To get better search results, add GOOGLE_API_KEY and GOOGLE_CSE_ID to .env file{Style.RESET_ALL}")
         
     def check_internet_connection(self):
         """Check if internet is available"""
@@ -95,6 +110,46 @@ class InternetSearch:
             
         self.has_internet = False
         return False
+    
+    def search_google_api(self, query):
+        """Search using Google Custom Search API (most reliable)"""
+        if not self.has_google_api:
+            return None
+            
+        try:
+            url = "https://www.googleapis.com/customsearch/v1"
+            params = {
+                'key': self.google_api_key,
+                'cx': self.google_cse_id,
+                'q': query,
+                'num': 5
+            }
+            
+            response = requests.get(url, params=params, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                results = []
+                
+                # Get search results
+                if 'items' in data:
+                    for item in data['items'][:3]:
+                        # Try to get snippet first
+                        if 'snippet' in item:
+                            results.append(item['snippet'])
+                        # Fallback to title if no snippet
+                        elif 'title' in item:
+                            results.append(item['title'])
+                
+                return results if results else None
+            else:
+                print(f"{Fore.RED}Google API error: {response.status_code} - {response.text}{Style.RESET_ALL}")
+                return None
+                
+        except Exception as e:
+            print(f"{Fore.RED}Google API search error: {str(e)}{Style.RESET_ALL}")
+            return None
     
     def search_duckduckgo(self, query, max_results=3):
         """Search DuckDuckGo using their instant answer API"""
@@ -342,7 +397,8 @@ class InternetSearch:
         
         # Try multiple search engines in preferred order
         search_methods = [
-            ("Google", self.search_google_simple),
+            ("Google API", self.search_google_api),      # Use API first if available
+            ("Google", self.search_google_simple),       # Fallback to scraping
             ("Bing", self.search_bing_api),
             ("Wikipedia", self.search_wikipedia_api),
             ("DuckDuckGo", self.search_duckduckgo)
@@ -350,24 +406,21 @@ class InternetSearch:
         
         for engine_name, search_func in search_methods:
             try:
-                print(f"{Fore.YELLOW}*burp* Trying {engine_name}...{Style.RESET_ALL}")
                 results = search_func(query)
                 if results and len(results) > 0:
-                    print(f"{Fore.GREEN}*burp* Found interdimensional knowledge from {engine_name}!{Style.RESET_ALL}")
-                    # DEBUG: Always show what we found for troubleshooting
-                    print(f"{Fore.CYAN}Debug - Search results from {engine_name}:{Style.RESET_ALL}")
-                    for i, result in enumerate(results):
-                        preview = result[:100] + "..." if len(result) > 100 else result
-                        print(f"{Fore.CYAN}  {i+1}. {preview}{Style.RESET_ALL}")
+                    print(f"{Fore.GREEN}*burp* Found knowledge from {engine_name}!{Style.RESET_ALL}")
+                    # Streamlined debug output
+                    if len(results) > 2:
+                        print(f"{Fore.CYAN}Found {len(results)} results{Style.RESET_ALL}")
                     return results
                 else:
-                    print(f"{Fore.YELLOW}*burp* {engine_name} didn't have what we need...{Style.RESET_ALL}")
+                    print(f"{Fore.YELLOW}*burp* {engine_name} didn't help...{Style.RESET_ALL}")
             except Exception as e:
-                print(f"{Fore.RED}*burp* {engine_name} search failed: {str(e)}{Style.RESET_ALL}")
+                print(f"{Fore.RED}*burp* {engine_name} failed: {str(e)[:50]}...{Style.RESET_ALL}")
                 continue
             
-            # Small delay between search engines to avoid rate limiting
-            time.sleep(1)
+            # Reduced delay between search engines for speed
+            time.sleep(0.5)  # Reduced from 1 second
         
         print(f"{Fore.RED}*burp* All search engines failed! The internet is being difficult today.{Style.RESET_ALL}")
         return None
@@ -402,35 +455,50 @@ class OllamaClient:
         """Select the best available model"""
         models = self.get_models()
         
-        # Updated priority order with your preferred sequence
+        # Updated priority order - avoiding reasoning models that can hang
         preferred_models = [
-            "qwen2.5:3b-instruct", # Qwen2.5:3b-instruct (your #1 choice)
-            "phi3:mini",         # Microsoft Phi-3 (your #2 choice)
-            "qwen2:1.5b",        # Qwen 1.5B (your #3 choice)  
-            "llama3.2:1b",       # Llama 3.2 1B (your #4  choice)
-            "gemma:2b",          # Google Gemma 2B (your #5 choice)
+            "qwen2.5:3b-instruct", # Qwen2.5:3b-instruct (ideal choice)
+            "gemma2:2b",            # Gemma2 2B (you have this - reliable!)
+            "qwen2:1.5b",           # Qwen 1.5B (you have this - reliable!)
+            "phi3:mini",            # Microsoft Phi-3 (reliable fallback)
+            "llama3.2:1b",          # Llama 3.2 1B 
+            "gemma:2b",             # Google Gemma 2B
+            "phi3:3.8b",            # Larger Phi3
+            "qwen3:4b",             # Qwen3 4B (can have thinking tokens - lower priority)
+            "qwen2.5:3b",           # Alternative qwen2.5 variant
+            "qwen2.5",              # Base qwen2.5
             "llama3.2:3b-instruct",
             "gemma2:2b-instruct",
             "tinyllama",
-            "phi3:3.8b",
             "gemma:7b"
         ]
         
+        # Debug: Print available models for troubleshooting
+        print(f"{Fore.CYAN}Available models: {models}{Style.RESET_ALL}")
+        
         for preferred in preferred_models:
-            # Check for exact match or partial match
+            # Check for exact match first
+            if preferred in models:
+                self.current_model = preferred
+                print(f"{Fore.GREEN}Selected exact match: {preferred}{Style.RESET_ALL}")
+                return preferred
+            
+            # Check for partial match (e.g., "qwen2.5:3b-instruct-q4" matches "qwen2.5:3b-instruct")
             for available in models:
-                if preferred == available or available.startswith(preferred + ":"):
+                if available.startswith(preferred):
                     self.current_model = available
+                    print(f"{Fore.GREEN}Selected partial match: {available} (looking for {preferred}){Style.RESET_ALL}")
                     return available
                     
         # Fallback to first available model
         if models:
             self.current_model = models[0]
+            print(f"{Fore.YELLOW}Using fallback model: {models[0]}{Style.RESET_ALL}")
             return models[0]
             
         return None
     
-    def chat(self, message, conversation_history=None, search_results=None):
+    def chat(self, message, conversation_history=None, search_results=None, debug_mode=False):
         """Send chat message to Ollama"""
         try:
             # Build messages array
@@ -452,21 +520,24 @@ class OllamaClient:
                 
             messages.append({"role": "user", "content": user_message})
             
-            # DEBUG: Print the payload being sent
-            print(f"{Fore.CYAN}Debug - Sending to Ollama:{Style.RESET_ALL}")
-            print(f"{Fore.CYAN}Model: {self.current_model}{Style.RESET_ALL}")
-            print(f"{Fore.CYAN}Messages count: {len(messages)}{Style.RESET_ALL}")
-            if search_results:
-                print(f"{Fore.CYAN}Search results included: {len(search_results)}{Style.RESET_ALL}")
+            # Only show debug info if debug mode is on
+            if debug_mode:
+                print(f"{Fore.CYAN}Debug - Sending to Ollama:{Style.RESET_ALL}")
+                print(f"{Fore.CYAN}Model: {self.current_model}{Style.RESET_ALL}")
+                print(f"{Fore.CYAN}Messages count: {len(messages)}{Style.RESET_ALL}")
+                if search_results:
+                    print(f"{Fore.CYAN}Search results included: {len(search_results)}{Style.RESET_ALL}")
             
             payload = {
                 "model": self.current_model,
                 "messages": messages,
                 "stream": True,
                 "options": {
-                    "temperature": 0.8,
+                    "temperature": 0.7,  # Slightly lower for more focused responses
                     "top_p": 0.9,
-                    "num_ctx": 4096
+                    "num_ctx": 2048,  # Reduced context window for speed
+                    "num_predict": 250,  # Reasonable response length (about 250 words)
+                    "stop": ["<think>", "</think>", "<|im_end|>", "<|endoftext|>", "\n\nUser:", "\n\nYou:"]  # Stop tokens
                 }
             }
             
@@ -474,34 +545,87 @@ class OllamaClient:
                 f"{self.base_url}/api/chat",
                 json=payload,
                 stream=True,
-                timeout=60  # Increased timeout
+                timeout=45  # Reduced timeout for speed
             )
             
             if response.status_code == 200:
                 full_response = ""
+                word_count = 0
+                in_thinking = False
+                
                 for line in response.iter_lines():
                     if line:
                         try:
                             data = json.loads(line)
+                            
                             if 'message' in data and 'content' in data['message']:
                                 content = data['message']['content']
-                                full_response += content
-                                print(content, end='', flush=True)
+                                
+                                # Filter out thinking tags and content
+                                if '<think>' in content:
+                                    in_thinking = True
+                                    content = content.split('<think>')[0]
+                                
+                                if '</think>' in content:
+                                    in_thinking = False
+                                    if '</think>' in content:
+                                        content = content.split('</think>')[-1]
+                                
+                                # Only add content if we're not in a thinking block
+                                if not in_thinking and content.strip():
+                                    full_response += content
+                                    print(content, end='', flush=True)
+                                    
+                                    # Count words for early stopping
+                                    word_count += len(content.split())
+                            
                             if data.get('done', False):
                                 break
+                            
+                            # Intelligent stopping - look for sentence endings near limit
+                            if word_count > 200:  # Near the limit
+                                if any(punct in content for punct in ['.', '!', '?']):
+                                    # Found a good stopping point
+                                    break
+                                
                         except json.JSONDecodeError:
                             continue
-                return full_response.strip()
+                        except Exception as e:
+                            continue
+                
+                # Clean up the response
+                cleaned_response = self.clean_response(full_response)
+                
+                if not cleaned_response.strip():
+                    return "*burp* Got an empty response from Ollama. The model might be having a bad day!"
+                    
+                return cleaned_response
             else:
-                error_msg = f"HTTP {response.status_code}: {response.text}"
+                error_msg = f"HTTP {response.status_code}: {response.text[:200]}"
                 print(f"{Fore.RED}Ollama error: {error_msg}{Style.RESET_ALL}")
                 return f"*burp* Ollama error: {error_msg}"
                 
         except requests.exceptions.Timeout:
-            return "*burp* Timeout waiting for Ollama response. The model might be thinking too hard!"
+            return "*burp* Timeout waiting for Ollama response. Try a faster model like phi3:mini!"
+        except requests.exceptions.ConnectionError:
+            return "*burp* Can't connect to Ollama! Is it running? Try: ollama serve"
+        except KeyboardInterrupt:
+            return "*burp* Response interrupted! Good thing, the AI was probably rambling anyway."
         except Exception as e:
             print(f"{Fore.RED}Chat error: {str(e)}{Style.RESET_ALL}")
             return f"*burp* Something went wrong: {str(e)}"
+    
+    def clean_response(self, response):
+        """Clean up the response by removing thinking tags and extra whitespace"""
+        # Remove any remaining thinking tags
+        response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL)
+        response = re.sub(r'<think>.*', '', response)  # Remove incomplete thinking blocks
+        response = re.sub(r'.*</think>', '', response)  # Remove ending of thinking blocks
+        
+        # Clean up extra whitespace
+        response = response.strip()
+        
+        return response
 
 def needs_search(message):
     """Determine if a message might need internet search"""
@@ -646,6 +770,7 @@ def main():
     print(f"\n{Fore.GREEN}{random.choice(RICK_INTROS)}{Style.RESET_ALL}")
     print(f"{Fore.CYAN}Type 'quit', 'exit', or 'bye' to exit{Style.RESET_ALL}")
     print(f"{Fore.CYAN}Type 'models' to see available models{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}Type 'install <model>' to install a new model{Style.RESET_ALL}")
     print(f"{Fore.CYAN}Type 'search <query>' to force a web search{Style.RESET_ALL}")
     print(f"{Fore.CYAN}Type 'debug' to toggle debug mode{Style.RESET_ALL}")
     if internet_available:
@@ -679,8 +804,50 @@ def main():
                     for model in models:
                         marker = " (current)" if model == ollama.current_model else ""
                         print(f"  - {model}{marker}")
+                    print(f"\n{Fore.YELLOW}Recommended models to install:{Style.RESET_ALL}")
+                    print(f"  ollama pull qwen2.5:3b-instruct  # Best balance of speed/intelligence")
+                    print(f"  ollama pull qwen3:4b            # Newer Qwen model") 
+                    print(f"  ollama pull gemma2:2b           # Google's latest")
                 else:
                     print(f"{Fore.YELLOW}Using traditional DialoGPT model{Style.RESET_ALL}")
+                continue
+            
+            if user_input.lower().startswith('use '):
+                model_name = user_input[4:].strip()
+                if use_ollama:
+                    available_models = ollama.get_models()
+                    if model_name in available_models:
+                        ollama.current_model = model_name
+                        print(f"{Fore.GREEN}*burp* Switched to {model_name}!{Style.RESET_ALL}")
+                        if 'qwen3' in model_name or 'reasoning' in model_name.lower():
+                            print(f"{Fore.YELLOW}⚠️  Warning: {model_name} may output thinking tokens and be slower{Style.RESET_ALL}")
+                    else:
+                        print(f"{Fore.RED}*burp* Model {model_name} not found!{Style.RESET_ALL}")
+                        print(f"{Fore.CYAN}Available models:{Style.RESET_ALL}")
+                        for model in available_models[:10]:  # Show first 10
+                            print(f"  - {model}")
+                else:
+                    print(f"{Fore.RED}*burp* Model switching only works with Ollama!{Style.RESET_ALL}")
+                continue
+            
+            if user_input.lower().startswith('install '):
+                model_name = user_input[8:].strip()
+                if use_ollama:
+                    print(f"{Fore.YELLOW}*burp* Installing {model_name}...{Style.RESET_ALL}")
+                    try:
+                        result = subprocess.run(['ollama', 'pull', model_name], 
+                                              capture_output=True, text=True, timeout=300)
+                        if result.returncode == 0:
+                            print(f"{Fore.GREEN}*burp* {model_name} installed successfully!{Style.RESET_ALL}")
+                            print(f"{Fore.CYAN}Type 'use {model_name}' to switch to it.{Style.RESET_ALL}")
+                        else:
+                            print(f"{Fore.RED}*burp* Failed to install {model_name}: {result.stderr}{Style.RESET_ALL}")
+                    except subprocess.TimeoutExpired:
+                        print(f"{Fore.RED}*burp* Installation timed out. Large models take time!{Style.RESET_ALL}")
+                    except Exception as e:
+                        print(f"{Fore.RED}*burp* Installation error: {e}{Style.RESET_ALL}")
+                else:
+                    print(f"{Fore.RED}*burp* Model installation only works with Ollama!{Style.RESET_ALL}")
                 continue
             
             # Handle forced search
@@ -698,19 +865,18 @@ def main():
             elif internet_available and needs_search(user_input):
                 search_results = search_engine.search_web(user_input)
                 
-                # Show what we found (if anything)
+                # Streamlined search feedback
                 if search_results:
-                    print(f"{Fore.CYAN}*burp* Found {len(search_results)} relevant results!{Style.RESET_ALL}")
+                    print(f"{Fore.CYAN}*burp* Got {len(search_results)} results!{Style.RESET_ALL}")
                 else:
-                    print(f"{Fore.YELLOW}*burp* Couldn't find current info, I'll work with what I know...{Style.RESET_ALL}")
+                    print(f"{Fore.YELLOW}*burp* No current info found...{Style.RESET_ALL}")
                 
-            # Show thinking indicator
-            print(f"{Fore.YELLOW}Rick: *burp* Let me think...{Style.RESET_ALL}", end="", flush=True)
+            # Show minimal thinking indicator
+            print(f"{Fore.GREEN}Rick: {Style.RESET_ALL}", end="", flush=True)
             
             # Get response
             if use_ollama:
-                print(f"\r{Fore.GREEN}Rick: {Style.RESET_ALL}", end="", flush=True)
-                response = ollama.chat(user_input, conversation_history, search_results)
+                response = ollama.chat(user_input, conversation_history, search_results, debug_mode)
                 print()  # New line after streaming response
             else:
                 response = traditional_chat(tokenizer, traditional_model, user_input, conversation_history, search_results)
@@ -726,7 +892,6 @@ def main():
                     response = f"{random.choice(honest_additions)} {response}"
                 
                 print(f"\r{Fore.GREEN}Rick: {response}{Style.RESET_ALL}")
-                
             # Add flavor if using traditional model
             if not use_ollama:
                 response = add_rick_flavor(response)
